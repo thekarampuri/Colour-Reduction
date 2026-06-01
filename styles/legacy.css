@@ -571,6 +571,7 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 /* Move tool panel */
 #tp-move{padding:6px 2px 0;}
 #tp-move .move-hint{font-size:11px;color:#666;line-height:1.7;}
+#btn-pan {
   height:22px;padding:0 9px;background:#e1e1e1;border:1px solid #adadad;
   border-radius:1px;font-size:12px;color:#444;display:none;
   align-items:center;justify-content:center;transition:all .1s;

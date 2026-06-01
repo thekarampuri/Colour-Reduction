@@ -1,495 +1,8 @@
-
-import React from 'react';
-
-export default function LegacyApp() {
-  return (
-    <div dangerouslySetInnerHTML={{ __html: `<div id="app">
-<!--━━ SIDEBAR ━━-->
-<div id="sidebar">
-  <div id="logo">
-    <div id="logo-title">Color Reduction</div>
-    <div id="logo-sub">Color Reduction</div>
-  </div>
-  <div id="sb-scroll">
-
-    <!-- Upload -->
-    <div class="grp">
-      <div class="grp-hdr">Image</div>
-      <div class="grp-body">
-        <div id="drop">
-          <div id="drop-icon">📁</div>
-          <div id="drop-label">Click or drop image<br><span style="font-size:10px;color:#aaa">BMP · PNG · JPG · GIF · WEBP</span></div>
-        </div>
-        <input type="file" id="file-inp" accept="image/*,.bmp" style="display:none"/>
-        <div id="file-info"><b id="fi-name">—</b><span id="fi-dim">—</span></div>
-        <div class="stat-row" id="fstats" style="display:none">
-          <div class="stat-box"><div class="stat-lbl">Size</div><div class="stat-val" id="ss">—</div></div>
-          <div class="stat-box"><div class="stat-lbl">Unique</div><div class="stat-val" id="su">—</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Color Picker -->
-    <div class="grp">
-      <div class="grp-hdr">Color Picker</div>
-      <div class="grp-body">
-        <button class="win-btn" id="btn-open-cp" style="width:100%;text-align:left;">
-          🎯 Color Picker Window
-        </button>
-        <div id="cp-sidebar-status" style="font-size:10px;color:#888;margin-top:4px;display:none;"></div>
-      </div>
-    </div>
-
-    <!-- Reduce -->
-    <div class="grp">
-      <div class="grp-hdr">Reduce</div>
-      <div class="grp-body">
-        <div class="field-row">
-          <label class="field-lbl">Colors</label>
-          <input type="number" class="win-inp" id="cnt-inp" min="2" max="256" placeholder="2–256" disabled/>
-        </div>
-        <div id="cnt-msg"></div>
-      </div>
-    </div>
-
-    <!-- Tools (shown after reduce) -->
-    <div class="grp" id="tools-sec" style="display:none">
-      <div class="grp-hdr">🛠 Tools</div>
-      <div class="grp-body" style="padding:4px 6px;">
-        <div class="tool-tabs">
-          <button class="ttab" id="ttab-tile" title="Tile">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor"><rect x="0" y="0" width="5" height="5" rx="1"/><rect x="8" y="0" width="5" height="5" rx="1"/><rect x="0" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>
-          </button>
-          <button class="ttab" id="ttab-fill" title="Fill">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M2 14h12v1.5H2zm1.5-2.5 4-9 4 9H3.5zm4-7L5.2 10h4.6L7.5 4.5z"/><circle cx="13" cy="10" r="2.5"/></svg>
-          </button>
-          <button class="ttab" id="ttab-paint" title="Paint">🖌</button>
-          <button class="ttab" id="ttab-outline" title="Outline">⬜</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Inline Tool Panel (shown when a tool is active, directly below tools) -->
-    <div id="sb-tool-panel">
-      <div id="sb-tool-panel-body"></div>
-    </div>
-
-    </div><!-- sb-scroll END -->
-
-  <!-- Actions bar -->
-  <div id="actions">
-    <div id="mode-badge"></div>
-    <div id="status">Processing…</div>
-    <button class="win-btn primary" id="btn-reduce" disabled>▶ Reduce Colors</button>
-    <div id="undo-row">
-      <button id="btn-undo" disabled title="Undo (Ctrl+Z)">← Undo</button>
-      <span id="hist-cnt">0/10</span>
-      <button id="btn-redo" disabled title="Redo (Ctrl+Y)">Redo →</button>
-    </div>
-    <div class="act-row">
-      <button class="win-btn" id="btn-cmap">🎨 Map</button>
-      <button class="win-btn" id="btn-lib">📚 Library</button>
-      <button class="win-btn" id="btn-exp">↓ Export</button>
-    </div>
-  </div>
-
-  <!-- Brand logo at bottom of sidebar -->
-  <div id="sb-brand">
-    <img src="logo/logo.PNG" alt="By Bhagya Lakshmi and Devi Priya" width="140">
-  </div>
-
-
-</div><!-- sidebar END -->
-
-<!-- ━━ TOOL POPUP WINDOWS ━━ -->
-<div class="tool-popup" id="popup-tile">
-  <div class="tool-popup-hdr" id="popup-tile-hdr">
-    <span>⊞ Tile</span>
-    <button class="tool-popup-close" onclick="closeToolPopup('tile')">✕</button>
-  </div>
-  <div class="tool-popup-body">
-    <div class="tp" id="tp-tile">
-      <div class="tile-grid">
-        <div class="tile-field"><label>Repeat X</label><input type="number" id="tile-x" value="1" min="1" max="16"/></div>
-        <div class="tile-field"><label>Repeat Y</label><input type="number" id="tile-y" value="1" min="1" max="16"/></div>
-      </div>
-      <div id="tile-info" style="margin-top:4px"></div>
-    </div>
-  </div>
-</div>
-
-<div class="tool-popup" id="popup-fill">
-  <div class="tool-popup-hdr" id="popup-fill-hdr">
-    <span>🪣 Fill</span>
-    <button class="tool-popup-close" onclick="closeToolPopup('fill')">✕</button>
-  </div>
-  <div class="tool-popup-body">
-    <div class="tp" id="tp-fill">
-      <div class="fill-modes">
-        <button class="fmode on" id="fmode-single">Single</button>
-        <button class="fmode" id="fmode-similar">Similar</button>
-      </div>
-      <div class="tool-active-color-row">
-        <span class="tool-color-lbl">Color</span>
-        <div class="tool-active-sw" id="fill-active-sw"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="tool-popup" id="popup-paint">
-  <div class="tool-popup-hdr" id="popup-paint-hdr">
-    <span>🖌 Paint</span>
-    <button class="tool-popup-close" onclick="closeToolPopup('paint')">✕</button>
-  </div>
-  <div class="tool-popup-body">
-    <div class="tp" id="tp-paint">
-      <div class="field-row" style="margin-bottom:6px;">
-        <label class="field-lbl" style="width:62px;">Brush px</label>
-        <input type="number" class="win-inp" id="paint-size-inp" min="1" max="64" value="1" style="width:58px;text-align:center;font-size:13px;font-weight:700;"/>
-        <span style="font-size:10px;color:#888;">px</span>
-      </div>
-      <div class="tool-active-color-row">
-        <span class="tool-color-lbl">Color</span>
-        <div class="tool-active-sw" id="paint-active-sw"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="tool-popup" id="popup-outline">
-  <div class="tool-popup-hdr" id="popup-outline-hdr">
-    <span>⬜ Outline</span>
-    <button class="tool-popup-close" onclick="closeToolPopup('outline')">✕</button>
-  </div>
-  <div class="tool-popup-body">
-    <div class="tp" id="tp-outline">
-      <div class="tool-active-color-row">
-        <span class="tool-color-lbl">Outline Color</span>
-        <div class="tool-active-sw" id="outline-active-sw"></div>
-      </div>
-
-      <!-- Multi-color group -->
-      <div style="margin:5px 0 3px;font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;">Color Group <span style="font-weight:400;color:#aaa;">(click canvas to add)</span></div>
-      <div id="ol-group-strip" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px;padding:4px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:3px;margin-bottom:5px;"></div>
-      <div style="display:flex;gap:4px;margin-bottom:6px;">
-        <button id="ol-group-apply" class="ol-act-btn" style="flex:1;background:#0078d4;color:#fff;border:none;border-radius:2px;padding:4px 0;font-size:10px;font-weight:700;cursor:pointer;">▶ Apply Outline</button>
-        <button id="ol-group-clear" class="ol-act-btn" style="background:#f5f5f5;border:1px solid #c8c8c8;border-radius:2px;padding:4px 6px;font-size:10px;color:#666;cursor:pointer;">✕ Clear</button>
-      </div>
-
-      <div class="ol-prop-row">
-        <span class="ol-prop-lbl">Area</span>
-        <div class="ol-radio-grp">
-          <label class="ol-radio"><input type="radio" name="ol-area" id="ol-area-single" checked/> Single</label>
-          <label class="ol-radio"><input type="radio" name="ol-area" id="ol-area-all"/> Similar</label>
-        </div>
-      </div>
-      <div class="ol-prop-row">
-        <span class="ol-prop-lbl">Type</span>
-        <div class="ol-radio-grp">
-          <label class="ol-radio"><input type="radio" name="ol-type" id="ol-type-inside" checked/> Inside</label>
-          <label class="ol-radio"><input type="radio" name="ol-type" id="ol-type-outside"/> Outside</label>
-        </div>
-      </div>
-      <div class="ol-prop-row">
-        <span class="ol-prop-lbl">Shape</span>
-        <select class="ol-shape-sel" id="ol-shape">
-          <option value="rect">Rectangle</option>
-          <option value="circle">Circle</option>
-          <option value="custom">Custom</option>
-        </select>
-      </div>
-      <div style="font-size:9px;font-weight:700;color:#666;margin-top:4px;margin-bottom:3px;text-transform:uppercase;">Direction (px)</div>
-      <div class="ol-dir-grid" id="ol-dir-grid">
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="tl" type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="t"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="tr" type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="l"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><div class="ol-dir-center">▣</div></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="r"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="bl" type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="b"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="br" type="number" value="0" min="0" max="99"/></div>
-      </div>
-      <div id="outline-status"></div>
-    </div>
-  </div>
-</div>
-
-<div class="tool-popup" id="popup-move">
-  <div class="tool-popup-hdr" id="popup-move-hdr">
-    <span>✥ Move</span>
-    <button class="tool-popup-close" onclick="closeToolPopup('move')">✕</button>
-  </div>
-  <div class="tool-popup-body">
-    <div class="tp" id="tp-move">
-      <div class="move-hint" style="font-size:11px;color:#666;line-height:1.7;">Drag the canvas to scroll / pan the view.</div>
-    </div>
-  </div>
-</div>
-
-<!--━━ RIGHT PANEL ━━-->
-<div id="right">
-  <div id="toolbar">
-    <button class="tb on" data-tab="orig">Original</button>
-    <button class="tb" data-tab="reduced" disabled>Reduced</button>
-    <div id="tb-sep"></div>
-    <div id="tile-badge">
-      <span id="tile-badge-txt">⊞ Tiled</span>
-      <button id="tile-badge-rst" title="Reset tiling">✕</button>
-    </div>
-    <div id="tb-sp"></div>
-    <button id="btn-pan" title="Hand · Hold &amp; drag to pan (H / Middle-click)">✋</button>
-    <div id="eye-live">
-      <div id="el-sw"></div>
-      <span id="el-hex"></span>
-      <span id="el-rgb" style="color:#aaa;margin-left:2px"></span>
-    </div>
-    <div id="zrow">
-      <button class="zb" id="btn-zo">−</button>
-      <div id="zpct">100%</div>
-      <button class="zb" id="btn-zi">+</button>
-      <button id="btn-z1">1:1</button>
-      <button id="btn-grid" title="Toggle pixel grid (visible at 4x+ zoom)">⊞ Grid</button>
-    </div>
-  </div>
-
-  <!-- Canvas + right palette panel side by side -->
-  <div id="canvas-row">
-    <div id="vp">
-      <div id="empty">
-        <div id="empty-icon">🖼</div>
-        <div id="empty-txt">OPEN AN IMAGE TO BEGIN</div>
-      </div>
-      <div id="ssp" style="width:100%;height:100%;min-width:100%;min-height:100%;">
-        <div id="cwrap">
-          <canvas id="co"></canvas>
-          <canvas id="cr"></canvas>
-          <canvas id="ch"></canvas>
-          <canvas id="cgrid"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Tabbed Panel: Library + Color Picker -->
-    <div id="rtp">
-      <div id="rtp-tabs">
-        <button class="rtp-tab on" id="rtp-tab-lib" onclick="rtpSwitch('lib')">📚<br>Library</button>
-        <button class="rtp-tab" id="rtp-tab-cp" onclick="rtpSwitch('cp')">🎯<br>Picker</button>
-      </div>
-
-      <!-- Library Pane -->
-      <div class="rtp-pane on" id="rtp-pane-lib">
-        <div id="rtp-lib-hdr">
-          Drag → palette to replace
-          <div id="rtp-lib-group-row">
-            <select id="lib-panel-grp"></select>
-            <button id="lib-panel-new-grp" title="Create group in Color Library">+</button>
-          </div>
-        </div>
-        <div id="lib-panel-scroll"></div>
-        <!-- Unified Add / Edit bar -->
-        <div id="lp-add-bar">
-          <input type="color" id="lp-add-ci" value="#0078d4"/>
-          <input type="text" id="lp-add-ni" placeholder="Shade name…" maxlength="20" style="flex:1;min-width:0;"/>
-          <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;">
-            <button id="lp-add-btn">+ Add</button>
-            <button id="lp-edit-cancel" style="display:none;font-size:9px;padding:1px 4px;background:#e1e1e1;border:1px solid #adadad;color:#555;border-radius:1px;cursor:pointer;">✕</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Color Picker Pane -->
-      <div class="rtp-pane" id="rtp-pane-cp">
-        <!-- Live color preview -->
-        <div id="rtp-cp-live">
-          <div id="rtp-cp-sw"></div>
-          <div>
-            <div id="rtp-cp-hex">—</div>
-            <div id="rtp-cp-rgb">Hover image</div>
-          </div>
-        </div>
-        <!-- Reduce bar -->
-        <div id="rtp-cp-reduce">
-          <input type="number" id="rtp-reduce-inp" min="2" max="256" placeholder="auto"/>
-          <button id="rtp-reduce-btn" disabled>▶</button>
-          <div id="rtp-reduce-msg"></div>
-        </div>
-        <!-- Sampled swatches -->
-        <div id="rtp-cp-grid">
-          <div id="rtp-cp-swatches"></div>
-          <div id="rtp-cp-empty">No colors yet<br><small>Enable Eyedrop<br>&amp; click image</small></div>
-        </div>
-        <!-- Footer -->
-        <div id="rtp-cp-footer">
-          <button class="win-btn" id="rtp-eye-btn">◎</button>
-          <span id="rtp-count">0</span>
-          <button class="win-btn" id="rtp-clear-btn">✕</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom Palette Strip -->
-  <div id="rpal">
-    <div id="rpal-resize-handle" title="Drag to resize palette"></div>
-    <div id="rpal-hdr">
-      <span id="rpal-hdr-title">Palette — Click swatch to fill Library Add bar</span>
-      <button id="btn-hl-mode" title="Toggle Highlight Mode — then click a swatch to highlight it on canvas" style="padding:2px 7px;font-size:10px;background:#e1e1e1;border:1px solid #adadad;border-radius:2px;cursor:pointer;color:#555;transition:all .12s;white-space:nowrap;">🔦 Highlight</button>
-      <div id="rpal-ctrl">
-        <label>Dim</label>
-        <input type="number" id="rpal-dim-inp" min="0" max="100" value="80" title="Overlay darkness when highlighting"/>
-        <span id="rpal-dim-pct">%</span>
-      </div>
-    </div>
-    <div style="display:flex;flex:1;overflow:hidden;align-items:flex-start;">
-      <div id="rpal-scroll"></div>
-      <button id="rpal-clear" title="Clear highlight (Esc)">✕ Clear</button>
-    </div>
-  </div>
-
-  <!-- Keep pstrip in DOM for legacy refs but hide it -->
-  <div id="pstrip" style="display:none">
-    <span id="plbl"></span>
-    <div id="hl-opacity-wrap" style="display:none">
-      <input type="number" id="hl-opacity-inp" value="80"/>
-    </div>
-    <button id="hl-clear" style="display:none"></button>
-  </div>
-</div><!-- right -->
-
-<div id="etip">
-  <div id="et-sw"></div>
-  <span id="et-hex" style="font-weight:600;font-family:monospace"></span>
-  <span id="et-rgb" style="color:#aaa;font-family:monospace"></span>
-</div>
-
-<!--━━ COLOR MAP ━━-->
-<div class="ov" id="cm-ov">
-  <div class="mwin" id="cm-win">
-    <div class="mhdr">
-      <div class="mtitle">Color Map <span id="cm-badge" style="font-size:10px;color:#888;font-weight:400;margin-left:6px"></span></div>
-      <button class="mclose" id="cm-close">✕</button>
-    </div>
-    <div id="cm-steps">
-      <div class="cstep"><div class="csn">1</div>Swatch</div><div class="csa">→</div>
-      <div class="cstep"><div class="csn">2</div>Usage %</div><div class="csa">→</div>
-      <div class="cstep"><div class="csn">3</div>Replace</div><div class="csa">→</div>
-      <div class="cstep"><div class="csn">📚</div>Library</div>
-    </div>
-    <div id="cm-list"><div class="cm-empty">Reduce an image first</div></div>
-    <div class="mfoot">
-      <button class="win-btn primary" id="cm-apply-all">Apply All</button>
-      <button class="win-btn" id="cm-reset">↺ Reset</button>
-      <div class="mfoot-note" id="cm-fnote"></div>
-    </div>
-  </div>
-</div>
-
-<!--━━ COLOR PICKER WINDOW ━━-->
-<div class="ov" id="cp-ov" style="z-index:1500">
-  <div class="mwin" id="cp-win">
-    <!-- Title bar with traffic-light buttons -->
-    <div class="mhdr" id="cp-hdr">
-      <div class="mtitle" style="font-size:12px;">🎯 Color Picker</div>
-      <div id="cp-win-btns">
-        <div class="cp-wbtn" id="cp-btn-min" title="Minimize">—</div>
-        <div class="cp-wbtn" id="cp-btn-max" title="Maximize">⤢</div>
-        <div class="cp-wbtn" id="cp-btn-close" title="Close">✕</div>
-      </div>
-    </div>
-    <!-- Live preview -->
-    <div id="cp-live-bar">
-      <div id="cp-live-sw"></div>
-      <div id="cp-live-info">
-        <div id="cp-live-hex">—</div>
-        <div id="cp-live-rgb">Hover image to preview</div>
-      </div>
-    </div>
-    <!-- Reduce bar -->
-    <div id="cp-reduce-bar">
-      <label>Reduce to</label>
-      <input type="number" id="cp-reduce-inp" min="2" max="256" placeholder="auto"/>
-      <span id="cp-reduce-msg"></span>
-      <button id="cp-reduce-btn" disabled>▶ Reduce</button>
-    </div>
-    <!-- Eyedrop hint -->
-    <div id="cp-use-hint">◉ Eyedrop ON — click image pixels to pick colors</div>
-    <!-- Colors grid -->
-    <div id="cp-body">
-      <div id="cp-sampled-grid"></div>
-      <div id="cp-empty">No colors yet<br><small>Enable Eyedrop &amp; click image</small></div>
-    </div>
-    <!-- Footer -->
-    <div id="cp-footer">
-      <button class="win-btn" id="cp-eye-btn">◎ Eyedrop</button>
-      <span id="cp-count-badge">0 colors</span>
-      <button class="win-btn" id="cp-clear-btn">✕ Clear</button>
-    </div>
-    <!-- Resize handle -->
-    <div id="cp-resize"></div>
-  </div>
-</div>
-
-<!--━━ UNIFIED LIBRARY WINDOW (manager + chooser) ━━-->
-<div class="ov" id="lm-ov">
-  <div class="mwin" id="lm-win">
-    <div class="mhdr" id="lm-hdr">
-      <div class="mtitle" id="lm-title">Color Library<span id="lm-mode-badge"></span></div>
-      <div id="lm-win-btns">
-        <div class="lm-wbtn" id="lm-btn-min" title="Minimize">—</div>
-        <div class="lm-wbtn" id="lm-btn-max" title="Maximize">⤢</div>
-        <div class="lm-wbtn" id="lm-btn-close" title="Close">✕</div>
-      </div>
-    </div>
-    <!-- File save/load toolbar -->
-    <div id="lm-file-bar">
-      <span>FILE</span>
-      <button class="lm-file-btn" id="lm-btn-connect" title="Connect to ColorPallete folder">📁 Connect Folder</button>
-      <button class="lm-file-btn" id="lm-btn-save" title="Save library to .sdlib file">💾 Save Library</button>
-      <button class="lm-file-btn" id="lm-btn-load" title="Load library from .sdlib file (replaces current)">📂 Load Library</button>
-      <button class="lm-file-btn" id="lm-btn-merge" title="Merge groups from a .sdlib file into current library">⊕ Merge File</button>
-      <input type="file" id="lm-file-inp" accept=".sdlib,.json" style="display:none"/>
-      <span id="lm-file-status"></span>
-    </div>
-    <!-- Fill hint: shown only in pick+fill mode -->
-    <div id="lm-fill-hint">
-      🎨 Click a color swatch to apply it as your fill color · Window stays open
-    </div>
-    <div class="lib-body" id="lm-body"></div>
-    <!-- Pick mode selection footer -->
-    <div id="lm-sel-bar">
-      <div id="lm-sel-sw"></div>
-      <div id="lm-sel-hex">— select a color —</div>
-      <button id="lm-use-btn" disabled>Use This Color</button>
-    </div>
-    <!-- Resize handle -->
-    <div id="lm-resize"></div>
-  </div>
-</div>
-
-<!-- Right palette swatch context menu -->
-<div id="rpal-ctx">
-  <div class="ctx-preview">
-    <div class="ctx-preview-sw" id="ctx-sw"></div>
-    <div>
-      <div class="ctx-preview-hex" id="ctx-hex"></div>
-      <div class="ctx-preview-pct" id="ctx-pct"></div>
-    </div>
-  </div>
-  <div class="ctx-item" id="ctx-lib"><span class="ctx-ico">📚</span> Replace from Library</div>
-  <div class="ctx-sep"></div>
-  <div class="ctx-item" id="ctx-copy"><span class="ctx-ico">📋</span> Copy Hex</div>
-  <div class="ctx-item" id="ctx-hl"><span class="ctx-ico">🔦</span> Highlight on Canvas</div>
-</div>
-
-</div><!-- app -->
-<script>
 /*━━ HELPERS ━━*/
-const \$=id=>document.getElementById(id);
+const $=id=>document.getElementById(id);
 const toHex=([r,g,b])=>'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
 const hexToRgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
-const isHex=h=>/^#[0-9a-fA-F]{6}\$/.test(h);
+const isHex=h=>/^#[0-9a-fA-F]{6}$/.test(h);
 const cdist=(a,b)=>Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);
 const clamp=(v,mn,mx)=>Math.max(mn,Math.min(mx,v));
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
@@ -498,13 +11,13 @@ function uid(){return Math.random().toString(36).slice(2,9);}
 
 function unlockApp(){
   document.body.classList.remove('activation-locked');
-  \$('activation-gate').classList.add('hidden');
+  $('activation-gate').classList.add('hidden');
 }
 async function initActivationGate(){
-  const gate=\$('activation-gate');
-  const input=\$('activation-input');
-  const error=\$('activation-error');
-  const hwIdEl=\$('activation-hw-id');
+  const gate=$('activation-gate');
+  const input=$('activation-input');
+  const error=$('activation-error');
+  const hwIdEl=$('activation-hw-id');
   let machineId='BROWSER-MODE';
   let licensed=false;
 
@@ -523,7 +36,7 @@ async function initActivationGate(){
   if(licensed){unlockApp();return;}
   gate.classList.remove('hidden');
   setTimeout(()=>input.focus(),0);
-  \$('activation-copy').onclick=async()=>{
+  $('activation-copy').onclick=async()=>{
     try{
       await navigator.clipboard.writeText(machineId);
       error.textContent='Machine ID copied';
@@ -549,7 +62,7 @@ async function initActivationGate(){
     error.textContent='Invalid license key';
     input.select();
   };
-  \$('activation-btn').onclick=tryActivate;
+  $('activation-btn').onclick=tryActivate;
   input.onkeydown=e=>{if(e.key==='Enter')tryActivate();};
 }
 initActivationGate();
@@ -706,8 +219,8 @@ function libLoadFile(file,merge){
         libShowStatus('Loaded ✓','ok');
       }
       // Rebuild the panel if window is open
-      if(\$('lm-ov').classList.contains('open')){
-        buildLibPanel(\$('lm-body'),libCurrentMode,
+      if($('lm-ov').classList.contains('open')){
+        buildLibPanel($('lm-body'),libCurrentMode,
           (libCurrentMode==='pick'&&libFillMode)?(h)=>{if(libPickCallback)libPickCallback(h);}:null,
           (libCurrentMode==='pick'&&!libFillMode)?(h)=>{if(libPickCallback)libPickCallback(h);closeLibWindow();}:null
         );
@@ -720,7 +233,7 @@ function libLoadFile(file,merge){
 }
 let _libStatusTimer=null;
 function libShowStatus(msg,type){
-  const el=\$('lm-file-status');
+  const el=$('lm-file-status');
   el.textContent=msg;el.className=type;
   clearTimeout(_libStatusTimer);
   _libStatusTimer=setTimeout(()=>{el.className='';el.textContent='';},3000);
@@ -762,8 +275,8 @@ if(!library){library=[
 ];libSave();}
 
 /*━━ APP STATE ━━*/
-const CO=\$('co'),CR=\$('cr'),CH=\$('ch');
-const VP=\$('vp'),SSP=\$('ssp'),CWRAP=\$('cwrap');
+const CO=$('co'),CR=$('cr'),CH=$('ch');
+const VP=$('vp'),SSP=$('ssp'),CWRAP=$('cwrap');
 let imgInfo=null,curTab='orig',cntVal='',cntErr='';
 let palette=[],palOrig=[],palPcts=[];
 let reducedData=null;   // ImageData backup of single-tile reduced image
@@ -782,7 +295,7 @@ function updateActiveToolColor(hex){
   activeToolColor=hex;
   // Update all tool preview swatches
   ['fill','paint','outline'].forEach(id=>{
-    const el=\$(id+'-active-sw');if(el)el.style.background=hex;
+    const el=$(id+'-active-sw');if(el)el.style.background=hex;
   });
 }
 const MAX_HIST=100;
@@ -813,23 +326,23 @@ function restoreEntry(e){
   CR.width=e.w;CR.height=e.h;
   CR.getContext('2d').putImageData(e.data,0,0);
   if(tileActive){
-    \$('tile-badge').classList.add('on');
+    $('tile-badge').classList.add('on');
   } else {
-    \$('tile-badge').classList.remove('on');
+    $('tile-badge').classList.remove('on');
   }
   updateSize();
 }
 function updateHistUI(){
-  \$('btn-undo').disabled=!undoStack.length;
-  \$('btn-redo').disabled=!redoStack.length;
-  \$('hist-cnt').textContent=undoStack.length+'/'+MAX_HIST;
+  $('btn-undo').disabled=!undoStack.length;
+  $('btn-redo').disabled=!redoStack.length;
+  $('hist-cnt').textContent=undoStack.length+'/'+MAX_HIST;
 }
 
 /*━━ CANVAS LAYOUT ━━*/
-function setZoom(z){zoom=z;zoomRef.v=z;\$('zpct').textContent=Math.round(z*100)+'%';updateSize();renderGrid();}
+function setZoom(z){zoom=z;zoomRef.v=z;$('zpct').textContent=Math.round(z*100)+'%';updateSize();renderGrid();}
 
 /*━━ PIXEL GRID OVERLAY ━━*/
-const CGRID=\$('cgrid');
+const CGRID=$('cgrid');
 function renderGrid(){
   if(!imgInfo||!gridOn||zoom<2){
     CGRID.style.display='none';
@@ -848,7 +361,7 @@ function renderGrid(){
   ctx.clearRect(0,0,CGRID.width,CGRID.height);
   // Line style — more subtle at lower zooms
   const alpha=zoom>=6?0.25:zoom>=4?0.18:0.12;
-  ctx.strokeStyle=\`rgba(0,0,0,\${alpha})\`;
+  ctx.strokeStyle=`rgba(0,0,0,${alpha})`;
   ctx.lineWidth=1;
   ctx.beginPath();
   // Vertical lines
@@ -883,7 +396,7 @@ function updateSize(){
   }
   renderGrid();
 }
-function showCanvas(){CWRAP.style.visibility='visible';\$('empty').style.display='none';updateSize();}
+function showCanvas(){CWRAP.style.visibility='visible';$('empty').style.display='none';updateSize();}
 function switchTab(t){
   curTab=t;
   CO.style.display=t==='orig'?'block':'none';
@@ -892,9 +405,9 @@ function switchTab(t){
   document.querySelectorAll('.tb').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   if(imgInfo){
     if(t==='reduced'&&imgInfo.reducedUnique!=null){
-      \$('su').textContent=imgInfo.reducedUnique.toLocaleString();
+      $('su').textContent=imgInfo.reducedUnique.toLocaleString();
     } else {
-      \$('su').textContent=imgInfo.originalUnique.toLocaleString();
+      $('su').textContent=imgInfo.originalUnique.toLocaleString();
     }
   }
   updateVpCursor();
@@ -904,11 +417,11 @@ function updateVpCursor2_NOOP(){}
 /*━━ MODE BADGE ━━*/
 function updateMode(){
   const mode=sampled.length>0?'A':cntVal&&!cntErr?'B':'C';
-  const mb=\$('mode-badge'),br=\$('btn-reduce');
+  const mb=$('mode-badge'),br=$('btn-reduce');
   if(imgInfo&&!busy){
     mb.style.display='block';
     const autoLabel=imgInfo&&imgInfo.originalUnique>256?'Auto · cap to 256':'Auto · keep all colors';
-    const labels={A:\`Picker · \${sampled.length} color\${sampled.length>1?'s':''}\`,B:\`Count · reduce to \${cntVal}\`,C:autoLabel};
+    const labels={A:`Picker · ${sampled.length} color${sampled.length>1?'s':''}`,B:`Count · reduce to ${cntVal}`,C:autoLabel};
     mb.textContent=labels[mode];
     br.disabled=false;
   }else{mb.style.display='none';if(!imgInfo||busy)br.disabled=true;}
@@ -918,25 +431,25 @@ function updateMode(){
 let cpMinimized=false,cpMaximized=false,cpRestoreRect=null;
 
 function openCpWindow(){
-  const win=\$('cp-win');
-  \$('cp-ov').classList.add('open');
+  const win=$('cp-win');
+  $('cp-ov').classList.add('open');
   renderSampled();
   updateCpEyeBtn();
   updateCpReduceBtn();
 }
 function closeCpWindow(){
-  \$('cp-ov').classList.remove('open');
-  if(pickerOn){pickerOn=false;updateCpEyeBtn();updateVpCursor();\$('etip').style.display='none';\$('eye-live').style.display='none';}
+  $('cp-ov').classList.remove('open');
+  if(pickerOn){pickerOn=false;updateCpEyeBtn();updateVpCursor();$('etip').style.display='none';$('eye-live').style.display='none';}
 }
 function updateCpEyeBtn(){
   const on=pickerOn;
-  \$('cp-eye-btn').textContent=on?'◉ Eyedrop ON':'◎ Eyedrop';
-  \$('cp-eye-btn').classList.toggle('on',on);
-  \$('cp-use-hint').style.display=on?'block':'none';
+  $('cp-eye-btn').textContent=on?'◉ Eyedrop ON':'◎ Eyedrop';
+  $('cp-eye-btn').classList.toggle('on',on);
+  $('cp-use-hint').style.display=on?'block':'none';
 }
 function updateCpReduceBtn(){
-  const btn=\$('cp-reduce-btn'),msg=\$('cp-reduce-msg');
-  const n=parseInt(\$('cp-reduce-inp').value);
+  const btn=$('cp-reduce-btn'),msg=$('cp-reduce-msg');
+  const n=parseInt($('cp-reduce-inp').value);
   const hasColors=sampled.length>0;
   const hasImg=!!imgInfo;
   if(!hasImg){btn.disabled=true;msg.textContent='Load image first';msg.style.color='#aaa';return;}
@@ -956,22 +469,22 @@ function updateCpReduceBtn(){
 
 // Minimize / Maximize / Restore
 function cpMinimize(){
-  const win=\$('cp-win');
+  const win=$('cp-win');
   if(cpMinimized){
     // Restore
     win.classList.remove('minimized');
     cpMinimized=false;
-    \$('cp-btn-min').title='Minimize';
-    \$('cp-btn-min').textContent='—';
+    $('cp-btn-min').title='Minimize';
+    $('cp-btn-min').textContent='—';
   } else {
     win.classList.add('minimized');
     cpMinimized=true;
-    \$('cp-btn-min').title='Restore';
-    \$('cp-btn-min').textContent='▢';
+    $('cp-btn-min').title='Restore';
+    $('cp-btn-min').textContent='▢';
   }
 }
 function cpMaximize(){
-  const win=\$('cp-win');
+  const win=$('cp-win');
   if(cpMaximized){
     // Restore from max
     if(cpRestoreRect){
@@ -979,8 +492,8 @@ function cpMaximize(){
       win.style.width=cpRestoreRect.width;win.style.height=cpRestoreRect.height;
     }
     win.classList.remove('minimized');cpMinimized=false;cpMaximized=false;
-    \$('cp-btn-max').title='Maximize';\$('cp-btn-max').textContent='⤢';
-    \$('cp-resize').style.display='block';
+    $('cp-btn-max').title='Maximize';$('cp-btn-max').textContent='⤢';
+    $('cp-resize').style.display='block';
   } else {
     // Save current and go full screen area
     const r=win.getBoundingClientRect();
@@ -988,14 +501,14 @@ function cpMaximize(){
     win.style.left='0';win.style.top='0';
     win.style.width='100vw';win.style.height='100vh';
     win.classList.remove('minimized');cpMinimized=false;cpMaximized=true;
-    \$('cp-btn-max').title='Restore';\$('cp-btn-max').textContent='❐';
-    \$('cp-resize').style.display='none';
+    $('cp-btn-max').title='Restore';$('cp-btn-max').textContent='❐';
+    $('cp-resize').style.display='none';
   }
 }
 
 // Drag
 (function(){
-  const win=\$('cp-win'),hdr=\$('cp-hdr');
+  const win=$('cp-win'),hdr=$('cp-hdr');
   let drag=false,ox=0,oy=0,wx=0,wy=0;
   hdr.addEventListener('mousedown',e=>{
     if(e.target.classList.contains('cp-wbtn'))return;
@@ -1017,7 +530,7 @@ function cpMaximize(){
 
 // Resize from SE corner
 (function(){
-  const win=\$('cp-win'),handle=\$('cp-resize');
+  const win=$('cp-win'),handle=$('cp-resize');
   let resizing=false,sx=0,sy=0,sw=0,sh=0;
   handle.addEventListener('mousedown',e=>{
     if(e.button!==0)return;
@@ -1036,7 +549,7 @@ function cpMaximize(){
 
 // Palette strip resize — drag top handle upward to grow
 (()=>{
-  const rpal=\$('rpal'),handle=\$('rpal-resize-handle');
+  const rpal=$('rpal'),handle=$('rpal-resize-handle');
   let resizing=false,startY=0,startH=0;
   handle.addEventListener('mousedown',e=>{
     if(e.button!==0)return;
@@ -1052,35 +565,35 @@ function cpMaximize(){
   document.addEventListener('mouseup',()=>{resizing=false;});
 })();
 
-\$('cp-btn-min').onclick=cpMinimize;
-\$('cp-btn-max').onclick=cpMaximize;
-\$('cp-btn-close').onclick=closeCpWindow;
-\$('btn-open-cp').onclick=()=>{
-  const isOpen=\$('cp-ov').classList.contains('open');
+$('cp-btn-min').onclick=cpMinimize;
+$('cp-btn-max').onclick=cpMaximize;
+$('cp-btn-close').onclick=closeCpWindow;
+$('btn-open-cp').onclick=()=>{
+  const isOpen=$('cp-ov').classList.contains('open');
   if(isOpen){if(cpMinimized)cpMinimize();else closeCpWindow();}
   else openCpWindow();
 };
-\$('cp-eye-btn').onclick=()=>{
+$('cp-eye-btn').onclick=()=>{
   pickerOn=!pickerOn;updateCpEyeBtn();updateVpCursor();
-  if(!pickerOn){\$('etip').style.display='none';\$('eye-live').style.display='none';}
+  if(!pickerOn){$('etip').style.display='none';$('eye-live').style.display='none';}
 };
-\$('cp-clear-btn').onclick=()=>{sampled=[];renderSampled();updateCpReduceBtn();updateMode();};
-\$('cp-reduce-inp').oninput=updateCpReduceBtn;
-\$('cp-reduce-btn').onclick=()=>{
+$('cp-clear-btn').onclick=()=>{sampled=[];renderSampled();updateCpReduceBtn();updateMode();};
+$('cp-reduce-inp').oninput=updateCpReduceBtn;
+$('cp-reduce-btn').onclick=()=>{
   // Sync cnt-inp with whatever is in the picker reduce input, then run reduce
-  const n=parseInt(\$('cp-reduce-inp').value);
-  if(!isNaN(n)&&n>=2&&n<=256){cntVal=String(n);\$('cnt-inp').value=n;validateCount(cntVal);}
-  else{cntVal='';\$('cnt-inp').value='';}
+  const n=parseInt($('cp-reduce-inp').value);
+  if(!isNaN(n)&&n>=2&&n<=256){cntVal=String(n);$('cnt-inp').value=n;validateCount(cntVal);}
+  else{cntVal='';$('cnt-inp').value='';}
   doReduce();
 };
 
 /*━━ SAMPLED COLORS ━━*/
 function renderSampled(){
-  const grid=\$('cp-sampled-grid');
+  const grid=$('cp-sampled-grid');
   grid.innerHTML='';
-  const empty=\$('cp-empty'),badge=\$('cp-count-badge');
+  const empty=$('cp-empty'),badge=$('cp-count-badge');
   badge.textContent=sampled.length+' color'+(sampled.length!==1?'s':'');
-  \$('cp-clear-btn').disabled=!sampled.length;
+  $('cp-clear-btn').disabled=!sampled.length;
   if(!sampled.length){empty.style.display='block';updateCpReduceBtn();return;}
   empty.style.display='none';
   sampled.forEach((c,i)=>{
@@ -1094,7 +607,7 @@ function renderSampled(){
     grid.appendChild(wrap);
   });
   // Sidebar status
-  const status=\$('cp-sidebar-status');
+  const status=$('cp-sidebar-status');
   status.textContent=sampled.length+' color'+(sampled.length!==1?'s':'')+' picked';
   status.style.display=sampled.length?'block':'none';
   updateCpReduceBtn();
@@ -1119,20 +632,20 @@ function getLibColorName(hex){
 // Pre-fill the Library Add bar with the clicked palette color
 function prefillLibAddBar(hex){
   setAddBarMode(); // reset to add mode
-  \$('lp-add-ci').value=hex;
+  $('lp-add-ci').value=hex;
   
-  \$('lp-add-ni').value='';
+  $('lp-add-ni').value='';
   rtpSwitch('lib');
   setTimeout(()=>{
-    const addBar=\$('lp-add-bar');
+    const addBar=$('lp-add-bar');
     if(addBar){addBar.style.background='#e8f3fd';addBar.style.borderTopColor='#0078d4';}
-    \$('lp-add-ni').focus();
+    $('lp-add-ni').focus();
     setTimeout(()=>{if(addBar){addBar.style.background='';addBar.style.borderTopColor='';}},1200);
   },50);
 }
 
 function renderPalette(pal,pcts){
-  const rpal=\$('rpal'),scroll=\$('rpal-scroll'),clearBtn=\$('rpal-clear');
+  const rpal=$('rpal'),scroll=$('rpal-scroll'),clearBtn=$('rpal-clear');
   if(!pal||!pal.length){rpal.classList.remove('on');return;}
   rpal.classList.add('on');
   scroll.innerHTML='';
@@ -1222,13 +735,13 @@ let _ctxPalIdx=null,_ctxPalRgb=null;
 function showRpalCtx(e,rgb,palIdx,pct){
   _ctxPalIdx=palIdx;_ctxPalRgb=rgb;
   const h=toHex(rgb);
-  \$('ctx-sw').style.background=h;
-  \$('ctx-hex').textContent=h.toUpperCase();
-  \$('ctx-pct').textContent=pct!=null?(pct>=0.1?pct.toFixed(2)+'% coverage':'<0.1% coverage'):'';
+  $('ctx-sw').style.background=h;
+  $('ctx-hex').textContent=h.toUpperCase();
+  $('ctx-pct').textContent=pct!=null?(pct>=0.1?pct.toFixed(2)+'% coverage':'<0.1% coverage'):'';
   // Highlight/unhighlight label
-  \$('ctx-hl').querySelector('.ctx-ico').textContent=isHlActive(rgb)?'✕':'🔦';
-  \$('ctx-hl').lastChild.textContent=isHlActive(rgb)?' Remove Highlight':' Highlight on Canvas';
-  const ctx=\$('rpal-ctx');
+  $('ctx-hl').querySelector('.ctx-ico').textContent=isHlActive(rgb)?'✕':'🔦';
+  $('ctx-hl').lastChild.textContent=isHlActive(rgb)?' Remove Highlight':' Highlight on Canvas';
+  const ctx=$('rpal-ctx');
   ctx.classList.add('open');
   // Position near cursor, clamp to viewport
   let x=e.clientX+2,y=e.clientY+2;
@@ -1236,30 +749,30 @@ function showRpalCtx(e,rgb,palIdx,pct){
   if(y+160>window.innerHeight)y=e.clientY-160;
   ctx.style.left=x+'px';ctx.style.top=y+'px';
 }
-function closeRpalCtx(){\$('rpal-ctx').classList.remove('open');}
+function closeRpalCtx(){$('rpal-ctx').classList.remove('open');}
 
 // Close on any click outside
 document.addEventListener('mousedown',e=>{
-  if(!\$('rpal-ctx').contains(e.target))closeRpalCtx();
+  if(!$('rpal-ctx').contains(e.target))closeRpalCtx();
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeRpalCtx();
 });
 
 // Copy Hex
-\$('ctx-copy').onclick=()=>{
+$('ctx-copy').onclick=()=>{
   if(_ctxPalRgb)navigator.clipboard?.writeText(toHex(_ctxPalRgb).toUpperCase());
   closeRpalCtx();
 };
 
 // Highlight/unhighlight
-\$('ctx-hl').onclick=()=>{
+$('ctx-hl').onclick=()=>{
   if(_ctxPalRgb)toggleHlColor(_ctxPalRgb);
   closeRpalCtx();
 };
 
 // Replace from Library
-\$('ctx-lib').onclick=()=>{
+$('ctx-lib').onclick=()=>{
   closeRpalCtx();
   if(_ctxPalIdx===null||!imgInfo)return;
   const targetIdx=_ctxPalIdx;
@@ -1296,7 +809,7 @@ function clearHL(){
   renderPalette(palette,palPcts);
   // Reset highlight mode button
   hlMode=false;
-  const btn=\$('btn-hl-mode');
+  const btn=$('btn-hl-mode');
   if(btn){btn.style.background='#e1e1e1';btn.style.borderColor='#adadad';btn.style.color='#555';btn.style.fontWeight='400';}
 }
 function renderHL(){
@@ -1330,10 +843,10 @@ function validateCount(v){
   cntErr='';return true;
 }
 function applyCountUI(){
-  const inp=\$('cnt-inp'),msg=\$('cnt-msg');
+  const inp=$('cnt-inp'),msg=$('cnt-msg');
   inp.classList.toggle('err',!!cntErr);inp.classList.toggle('ok',!cntErr&&!!cntVal);
   msg.className=cntErr?'err':cntVal&&imgInfo?'ok':'';
-  msg.textContent=cntErr?cntErr:(cntVal&&imgInfo?\`\${imgInfo.originalUnique.toLocaleString()} → \${cntVal} colors\`:'');
+  msg.textContent=cntErr?cntErr:(cntVal&&imgInfo?`${imgInfo.originalUnique.toLocaleString()} → ${cntVal} colors`:'');
   updateMode();
 }
 
@@ -1350,23 +863,23 @@ function loadFile(file){
     palette=[];palOrig=[];reducedData=null;reducedW=0;reducedH=0;
     sampled=[];cntVal='';cntErr='';
     undoStack=[];redoStack=[];tileActive=false;activeTool=null;
-    \$('tile-x').value=1;\$('tile-y').value=1;\$('tile-info').textContent='';
-    \$('drop').innerHTML='<div id="drop-icon" style="font-size:18px;opacity:.25;margin-bottom:2px">📄</div><div style="font-size:11px;color:#555">'+file.name+'</div>';
-    \$('fstats').style.display='flex';\$('ss').textContent=w+'×'+h;\$('su').textContent=unique.toLocaleString();
-    const inp=\$('cnt-inp');inp.disabled=false;inp.value='';inp.max=256;inp.placeholder='2–'+Math.min(256,unique-1);inp.className='win-inp';
+    $('tile-x').value=1;$('tile-y').value=1;$('tile-info').textContent='';
+    $('drop').innerHTML='<div id="drop-icon" style="font-size:18px;opacity:.25;margin-bottom:2px">📄</div><div style="font-size:11px;color:#555">'+file.name+'</div>';
+    $('fstats').style.display='flex';$('ss').textContent=w+'×'+h;$('su').textContent=unique.toLocaleString();
+    const inp=$('cnt-inp');inp.disabled=false;inp.value='';inp.max=256;inp.placeholder='2–'+Math.min(256,unique-1);inp.className='win-inp';
     if(unique>256){
-      \$('cnt-msg').textContent='⚠ '+unique.toLocaleString()+' colors — max 256. Enter count or reduce will use 256.';
-      \$('cnt-msg').className='err';
+      $('cnt-msg').textContent='⚠ '+unique.toLocaleString()+' colors — max 256. Enter count or reduce will use 256.';
+      $('cnt-msg').className='err';
     } else {
-      \$('cnt-msg').textContent='Original: '+unique.toLocaleString()+' colors · leave blank to keep all';
-      \$('cnt-msg').className='';
+      $('cnt-msg').textContent='Original: '+unique.toLocaleString()+' colors · leave blank to keep all';
+      $('cnt-msg').className='';
     }
     renderSampled();renderPalette(null);
     document.querySelector('.tb[data-tab="reduced"]').disabled=true;
-    \$('btn-exp').style.display='none';\$('btn-cmap').style.display='none';
-    \$('tools-sec').style.display='none';\$('undo-row').classList.remove('on');
-    \$('tile-badge').classList.remove('on');
-    \$('btn-pan').classList.add('visible');
+    $('btn-exp').style.display='none';$('btn-cmap').style.display='none';
+    $('tools-sec').style.display='none';$('undo-row').classList.remove('on');
+    $('tile-badge').classList.remove('on');
+    $('btn-pan').classList.add('visible');
     updateHistUI();setActiveTool(null);
     switchTab('orig');setZoom(1);showCanvas();CO.style.display='block';CR.style.display='none';CH.style.display='none';
     updateMode();
@@ -1376,11 +889,11 @@ function loadFile(file){
 
 /*━━ REDUCE ━━*/
 async function doReduce(){
-  if(!imgInfo||busy)return;busy=true;\$('btn-reduce').disabled=true;\$('mode-badge').style.display='none';
-  tileActive=false;\$('tile-badge').classList.remove('on');
-  \$('tile-x').value=1;\$('tile-y').value=1;\$('tile-info').textContent='';
+  if(!imgInfo||busy)return;busy=true;$('btn-reduce').disabled=true;$('mode-badge').style.display='none';
+  tileActive=false;$('tile-badge').classList.remove('on');
+  $('tile-x').value=1;$('tile-y').value=1;$('tile-info').textContent='';
   hlColors=[];CH.getContext('2d').clearRect(0,0,CH.width,CH.height);CH.style.display='none';
-  const sl=\$('status');sl.style.display='block';await pause(30);
+  const sl=$('status');sl.style.display='block';await pause(30);
   const ctx=CO.getContext('2d'),imgData=ctx.getImageData(0,0,imgInfo.w,imgInfo.h);let pal;
   if(sampled.length>0){
     sl.textContent='Using '+sampled.length+' picked color'+(sampled.length>1?'s':'')+'…';await pause(30);pal=sampled.map(c=>c.rgb);
@@ -1410,11 +923,11 @@ async function doReduce(){
   // Track reduced unique count separately — never overwrite originalUnique
   const actualUnique=countUnique(CR.getContext('2d').getImageData(0,0,imgInfo.w,imgInfo.h).data);
   imgInfo.reducedUnique=actualUnique;
-  \$('su').textContent=actualUnique.toLocaleString();
+  $('su').textContent=actualUnique.toLocaleString();
   sl.style.display='none';busy=false;
   document.querySelector('.tb[data-tab="reduced"]').disabled=false;
-  \$('btn-exp').style.display='block';\$('btn-cmap').style.display='block';
-  \$('tools-sec').style.display='block';\$('undo-row').classList.add('on');
+  $('btn-exp').style.display='block';$('btn-cmap').style.display='block';
+  $('tools-sec').style.display='block';$('undo-row').classList.add('on');
   undoStack=[];redoStack=[];updateHistUI();
   switchTab('reduced');updateMode();
 }
@@ -1427,7 +940,7 @@ function canvasToBmp(canvas,filename){
   let off=54;for(let y=0;y<h;y++){for(let x=0;x<w;x++){const s=(y*w+x)*4;view.setUint8(off++,d[s+2]);view.setUint8(off++,d[s+1]);view.setUint8(off++,d[s]);}for(let p=0;p<(rs-w*3);p++)view.setUint8(off++,0);}
   const blob=new Blob([buf],{type:'image/bmp'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename||'output.bmp';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function exportBmp(){canvasToBmp(curTab==='reduced'?CR:CO,\`reduced_\${palette.length}colors.bmp\`);}
+function exportBmp(){canvasToBmp(curTab==='reduced'?CR:CO,`reduced_${palette.length}colors.bmp`);}
 
 /*━━ EYEDROPPER ━━*/
 function pickAt(e,commit){
@@ -1441,13 +954,13 @@ function pickAt(e,commit){
     if(!sampled.find(x=>x.hex===hex)){sampled=[...sampled,{hex,rgb}];renderSampled();}
   } else {
     // Update floating tooltip
-    \$('et-sw').style.background=hex;\$('et-hex').textContent=hex.toUpperCase();\$('et-rgb').textContent='rgb('+rgb.join(',')+')';
-    \$('etip').style.cssText='display:flex;left:'+(e.clientX+14)+'px;top:'+(e.clientY-36)+'px;';
-    \$('eye-live').style.display='flex';\$('el-sw').style.background=hex;\$('el-hex').textContent=hex.toUpperCase();\$('el-rgb').textContent='rgb('+rgb.join(',')+')';
+    $('et-sw').style.background=hex;$('et-hex').textContent=hex.toUpperCase();$('et-rgb').textContent='rgb('+rgb.join(',')+')';
+    $('etip').style.cssText='display:flex;left:'+(e.clientX+14)+'px;top:'+(e.clientY-36)+'px;';
+    $('eye-live').style.display='flex';$('el-sw').style.background=hex;$('el-hex').textContent=hex.toUpperCase();$('el-rgb').textContent='rgb('+rgb.join(',')+')';
     // Update live bar in Color Picker window
-    \$('cp-live-sw').style.background=hex;
-    \$('cp-live-hex').textContent=hex.toUpperCase();
-    \$('cp-live-rgb').textContent='rgb('+rgb.join(', ')+')';
+    $('cp-live-sw').style.background=hex;
+    $('cp-live-hex').textContent=hex.toUpperCase();
+    $('cp-live-rgb').textContent='rgb('+rgb.join(', ')+')';
   }
 }
 
@@ -1466,10 +979,10 @@ VP.addEventListener('wheel',e=>{
 const TOOL_LABELS={tile:'⊞ Tile',fill:'🪣 Fill',paint:'🖌 Paint',outline:'⬜ Outline',move:'✥ Move'};
 
 function openToolPopup(name){
-  const popup=\$('popup-'+name);
+  const popup=$('popup-'+name);
   if(!popup)return;
-  const panel=\$('sb-tool-panel');
-  const panelBody=\$('sb-tool-panel-body');
+  const panel=$('sb-tool-panel');
+  const panelBody=$('sb-tool-panel-body');
   // Move the actual .tp content node into the panel body so all IDs/events stay live
   const tp=popup.querySelector('.tp');
   if(tp){
@@ -1483,13 +996,13 @@ function openToolPopup(name){
 function closeToolPopup(name){
   // Return the .tp node back to its popup before closing
   _returnTpToPopup(name);
-  \$('sb-tool-panel').classList.remove('open');
-  if(activeTool===name){activeTool=null;\$('ttab-'+name).classList.remove('on');updateVpCursor();}
+  $('sb-tool-panel').classList.remove('open');
+  if(activeTool===name){activeTool=null;$('ttab-'+name).classList.remove('on');updateVpCursor();}
 }
 function _returnTpToPopup(name){
-  const popup=\$('popup-'+name);
+  const popup=$('popup-'+name);
   if(!popup)return;
-  const panelBody=\$('sb-tool-panel-body');
+  const panelBody=$('sb-tool-panel-body');
   const tp=panelBody.querySelector('.tp');
   if(tp){
     const popupBody=popup.querySelector('.tool-popup-body');
@@ -1501,14 +1014,14 @@ function setActiveTool(name){
   const prev=activeTool;
   activeTool=activeTool===name?null:name;
   ['tile','fill','paint','outline'].forEach(t=>{
-    const el=\$('ttab-'+t);if(el)el.classList.toggle('on',activeTool===t);
+    const el=$('ttab-'+t);if(el)el.classList.toggle('on',activeTool===t);
   });
-  \$('btn-pan').classList.toggle('on',activeTool==='pan');
+  $('btn-pan').classList.toggle('on',activeTool==='pan');
   // Return previous tool's .tp node to its popup before switching
   if(prev&&prev!=='pan')_returnTpToPopup(prev);
   // Open sidebar panel for new tool, close if deactivated
   if(activeTool&&activeTool!=='pan')openToolPopup(activeTool);
-  else \$('sb-tool-panel').classList.remove('open');
+  else $('sb-tool-panel').classList.remove('open');
   updateVpCursor();
 }
 
@@ -1526,21 +1039,21 @@ function updateVpCursor(){
 /*━━ TILING — draws directly into CR ━━*/
 function updateTileInfo(){
   if(!imgInfo||!reducedData)return;
-  const rx=clamp(parseInt(\$('tile-x').value)||1,1,16);
-  const ry=clamp(parseInt(\$('tile-y').value)||1,1,16);
-  if(rx===1&&ry===1)\$('tile-info').textContent='';
-  else \$('tile-info').textContent=\`\${reducedW*rx} × \${reducedH*ry} px (\${rx}×\${ry})\`;
+  const rx=clamp(parseInt($('tile-x').value)||1,1,16);
+  const ry=clamp(parseInt($('tile-y').value)||1,1,16);
+  if(rx===1&&ry===1)$('tile-info').textContent='';
+  else $('tile-info').textContent=`${reducedW*rx} × ${reducedH*ry} px (${rx}×${ry})`;
 }
 function liveApplyTile(){
   if(!imgInfo||!reducedData)return;
-  const rx=clamp(parseInt(\$('tile-x').value)||1,1,16);
-  const ry=clamp(parseInt(\$('tile-y').value)||1,1,16);
+  const rx=clamp(parseInt($('tile-x').value)||1,1,16);
+  const ry=clamp(parseInt($('tile-y').value)||1,1,16);
   if(rx===1&&ry===1){
     // reset back to single image
     tileActive=false;
     CR.width=reducedW;CR.height=reducedH;
     CR.getContext('2d').putImageData(reducedData,0,0);
-    \$('tile-badge').classList.remove('on');
+    $('tile-badge').classList.remove('on');
     updateSize();return;
   }
   // Tile directly into CR
@@ -1554,8 +1067,8 @@ function liveApplyTile(){
     for(let tx=0;tx<rx;tx++)
       ctx.drawImage(tmp,tx*reducedW,ty*reducedH);
   tileActive=true;
-  \$('tile-badge-txt').textContent=\`⊞ \${rx}×\${ry}\`;
-  \$('tile-badge').classList.add('on');
+  $('tile-badge-txt').textContent=`⊞ ${rx}×${ry}`;
+  $('tile-badge').classList.add('on');
   updateSize();
   if(hlColors.length)renderHL();
   if(curTab==='reduced')requestAnimationFrame(()=>{VP.scrollLeft=0;VP.scrollTop=0;});
@@ -1565,8 +1078,8 @@ function resetTile(){
   tileActive=false;
   CR.width=reducedW;CR.height=reducedH;
   CR.getContext('2d').putImageData(reducedData,0,0);
-  \$('tile-x').value=1;\$('tile-y').value=1;\$('tile-info').textContent='';
-  \$('tile-badge').classList.remove('on');
+  $('tile-x').value=1;$('tile-y').value=1;$('tile-info').textContent='';
+  $('tile-badge').classList.remove('on');
   updateSize();
   if(hlColors.length)renderHL();
 }
@@ -1575,15 +1088,15 @@ function onTileInput(){
   clearTimeout(tileDebounce);
   tileDebounce=setTimeout(liveApplyTile,300);
 }
-\$('tile-x').oninput=onTileInput;
-\$('tile-y').oninput=onTileInput;
-\$('tile-x').onchange=liveApplyTile;
-\$('tile-y').onchange=liveApplyTile;
-\$('tile-badge-rst').onclick=resetTile;
+$('tile-x').oninput=onTileInput;
+$('tile-y').oninput=onTileInput;
+$('tile-x').onchange=liveApplyTile;
+$('tile-y').onchange=liveApplyTile;
+$('tile-badge-rst').onclick=resetTile;
 
 /*━━ MAGIC FILL ━━*/
-\$('fmode-single').onclick=()=>{fillMode='single';\$('fmode-single').classList.add('on');\$('fmode-similar').classList.remove('on');};
-\$('fmode-similar').onclick=()=>{fillMode='similar';\$('fmode-similar').classList.add('on');\$('fmode-single').classList.remove('on');};
+$('fmode-single').onclick=()=>{fillMode='single';$('fmode-single').classList.add('on');$('fmode-similar').classList.remove('on');};
+$('fmode-similar').onclick=()=>{fillMode='similar';$('fmode-similar').classList.add('on');$('fmode-single').classList.remove('on');};
 
 // Helper: set fill color
 function setFillColor(hex){updateActiveToolColor(hex);}
@@ -1682,7 +1195,7 @@ let paintBrushSize=1;
 let _paintDown=false,_paintLastPx=null;
 let _paintBuf=null; // persistent ImageData buffer across the stroke
 
-\$('paint-size-inp').oninput=function(){
+$('paint-size-inp').oninput=function(){
   let v=parseInt(this.value)||1;
   paintBrushSize=Math.max(1,Math.min(64,v));
 };
@@ -1795,7 +1308,7 @@ function olAddToGroup(pos, rgb, mask){
 }
 
 function olRenderStrip(){
-  const strip=\$('ol-group-strip');
+  const strip=$('ol-group-strip');
   if(!strip)return;
   strip.innerHTML='';
   if(!olColorGroup.length){
@@ -2025,7 +1538,7 @@ function applyOutline(srcRgb, connectedMask=null, skipPush=false){
 }
 
 function showOlStatus(msg,col){
-  const el=\$('outline-status');el.textContent=msg;el.style.color=col;el.style.display='block';
+  const el=$('outline-status');el.textContent=msg;el.style.color=col;el.style.display='block';
   setTimeout(()=>el.style.display='none',2800);
 }
 
@@ -2037,16 +1550,16 @@ VP.onclick=e=>{
   else if(activeTool==='outline')doOutlineAt(e);
 };
 VP.onmousemove=e=>{if(pickerOn)pickAt(e,false);};
-VP.onmouseleave=()=>{\$('etip').style.display='none';};
+VP.onmouseleave=()=>{$('etip').style.display='none';};
 
 /*━━ COLOR MAP ━━*/
 let lcCallback=null;
-function openColorMap(){if(!palette.length)return;\$('cm-ov').classList.add('open');buildCmRows();}
-function closeColorMap(){\$('cm-ov').classList.remove('open');}
+function openColorMap(){if(!palette.length)return;$('cm-ov').classList.add('open');buildCmRows();}
+function closeColorMap(){$('cm-ov').classList.remove('open');}
 function buildCmRows(){
-  const list=\$('cm-list');list.innerHTML='';
+  const list=$('cm-list');list.innerHTML='';
   if(!palette.length){list.innerHTML='<div class="cm-empty">Reduce an image first</div>';return;}
-  \$('cm-badge').textContent=palette.length+' color'+(palette.length>1?'s':'');
+  $('cm-badge').textContent=palette.length+' color'+(palette.length>1?'s':'');
   const{counts,total}=measureUsage(palette);const maxC=Math.max(...counts,1);
   const order=[...palette.keys()].sort((a,b)=>counts[b]-counts[a]);
   let rCount=0;
@@ -2068,16 +1581,16 @@ function buildCmRows(){
       pushUndo();replacePxColor(palette[palIdx],newRgb);palette[palIdx]=newRgb;
       sw.style.background=newHex;info.innerHTML='<div class="cm-hex">'+newHex.toUpperCase()+'</div><div class="cm-rgb">rgb('+newRgb.join(', ')+')</div>';
       bf.style.background=newHex;ab.textContent='✓ Done';ab.classList.add('done');row.classList.add('replaced');
-      renderPalette(palette,palPcts);rCount++;\$('cm-fnote').textContent=rCount+' replaced';
+      renderPalette(palette,palPcts);rCount++;$('cm-fnote').textContent=rCount+' replaced';
     };
     ab.onclick=doApply;lb.onclick=()=>{lcFillMode=false;lcCallback=h=>{ci.value=h;};openLcModal();};
     rep.appendChild(rlbl);rep.appendChild(ci);rep.appendChild(lb);rep.appendChild(ab);
     row.appendChild(sw);row.appendChild(info);row.appendChild(pw);row.appendChild(rep);list.appendChild(row);
   });
-  \$('cm-fnote').textContent=palette.length+' colors · by coverage';
+  $('cm-fnote').textContent=palette.length+' colors · by coverage';
 }
-\$('cm-apply-all').onclick=()=>document.querySelectorAll('.cm-apply-btn:not(.done)').forEach(b=>b.click());
-\$('cm-reset').onclick=()=>{
+$('cm-apply-all').onclick=()=>document.querySelectorAll('.cm-apply-btn:not(.done)').forEach(b=>b.click());
+$('cm-reset').onclick=()=>{
   if(!imgInfo||!palOrig.length)return;
   pushUndo();
   const red=applyPal(CO.getContext('2d').getImageData(0,0,imgInfo.w,imgInfo.h).data,palOrig);
@@ -2085,12 +1598,12 @@ function buildCmRows(){
   CR.getContext('2d').putImageData(new ImageData(red,imgInfo.w,imgInfo.h),0,0);
   reducedData=CR.getContext('2d').getImageData(0,0,imgInfo.w,imgInfo.h);
   reducedW=imgInfo.w;reducedH=imgInfo.h;
-  tileActive=false;\$('tile-badge').classList.remove('on');
-  \$('tile-x').value=1;\$('tile-y').value=1;\$('tile-info').textContent='';
+  tileActive=false;$('tile-badge').classList.remove('on');
+  $('tile-x').value=1;$('tile-y').value=1;$('tile-info').textContent='';
   palette=palOrig.map(c=>[...c]);renderPalette(palette,palPcts);buildCmRows();updateSize();
 };
-\$('cm-close').onclick=closeColorMap;
-\$('cm-ov').onclick=e=>{if(e.target===\$('cm-ov'))closeColorMap();};
+$('cm-close').onclick=closeColorMap;
+$('cm-ov').onclick=e=>{if(e.target===$('cm-ov'))closeColorMap();};
 
 /*━━ UNIFIED LIBRARY WINDOW ━━*/
 let libCurrentMode='manage'; // 'manage' | 'pick'
@@ -2100,20 +1613,20 @@ let libPickCallback=null;
 function openLibWindow(mode,fillMode,callback){
   libCurrentMode=mode;libFillMode=fillMode||false;libPickCallback=callback||null;
   const isPick=mode==='pick';
-  \$('lm-title').innerHTML=(isPick?(fillMode?'Library — Click Color to Apply':'Choose from Color Library'):'Color Library')
+  $('lm-title').innerHTML=(isPick?(fillMode?'Library — Click Color to Apply':'Choose from Color Library'):'Color Library')
     +'<span id="lm-mode-badge" style="font-size:10px;color:#888;font-weight:400;margin-left:6px">'+(isPick?'[pick]':'[manage]')+'</span>';
-  \$('lm-fill-hint').style.display=(isPick&&fillMode)?'block':'none';
-  \$('lm-sel-bar').style.display=isPick?'flex':'none';
-  if(isPick){\$('lm-sel-sw').style.background='#e0e0e0';\$('lm-sel-hex').textContent='— select a color —';\$('lm-use-btn').disabled=true;}
+  $('lm-fill-hint').style.display=(isPick&&fillMode)?'block':'none';
+  $('lm-sel-bar').style.display=isPick?'flex':'none';
+  if(isPick){$('lm-sel-sw').style.background='#e0e0e0';$('lm-sel-hex').textContent='— select a color —';$('lm-use-btn').disabled=true;}
   // Reset window state if minimized
-  if(lmMinimized){\$('lm-win').classList.remove('minimized');lmMinimized=false;\$('lm-btn-min').textContent='—';}
-  buildLibPanel(\$('lm-body'),mode,
+  if(lmMinimized){$('lm-win').classList.remove('minimized');lmMinimized=false;$('lm-btn-min').textContent='—';}
+  buildLibPanel($('lm-body'),mode,
     (isPick&&fillMode)?(h)=>{if(libPickCallback)libPickCallback(h);}:null,
     (isPick&&!fillMode)?(h)=>{if(libPickCallback)libPickCallback(h);closeLibWindow();}:null
   );
-  \$('lm-ov').classList.add('open');
+  $('lm-ov').classList.add('open');
 }
-function closeLibWindow(){\$('lm-ov').classList.remove('open');libFillMode=false;libPickCallback=null;lcLastCanvasEvent=null;}
+function closeLibWindow(){$('lm-ov').classList.remove('open');libFillMode=false;libPickCallback=null;lcLastCanvasEvent=null;}
 // Legacy aliases
 function openLcModal(){openLibWindow('pick',lcFillMode,lcCallback);}
 function closeLcModal(){closeLibWindow();}
@@ -2132,40 +1645,40 @@ function closeLibManager(){closeLibWindow();}
 // Traffic-light buttons
 let lmMinimized=false,lmMaximized=false,lmRestoreRect=null;
 function lmMinimize(){
-  const win=\$('lm-win');
+  const win=$('lm-win');
   if(lmMinimized){
     win.classList.remove('minimized');lmMinimized=false;
-    \$('lm-btn-min').title='Minimize';\$('lm-btn-min').textContent='—';
+    $('lm-btn-min').title='Minimize';$('lm-btn-min').textContent='—';
   } else {
     win.classList.add('minimized');lmMinimized=true;
-    \$('lm-btn-min').title='Restore';\$('lm-btn-min').textContent='▢';
+    $('lm-btn-min').title='Restore';$('lm-btn-min').textContent='▢';
   }
 }
 function lmMaximize(){
-  const win=\$('lm-win');
+  const win=$('lm-win');
   if(lmMaximized){
     if(lmRestoreRect){win.style.left=lmRestoreRect.left;win.style.top=lmRestoreRect.top;win.style.width=lmRestoreRect.width;win.style.height=lmRestoreRect.height;}
     win.classList.remove('minimized');lmMinimized=false;lmMaximized=false;
-    \$('lm-btn-max').title='Maximize';\$('lm-btn-max').textContent='⤢';
-    \$('lm-resize').style.display='block';
+    $('lm-btn-max').title='Maximize';$('lm-btn-max').textContent='⤢';
+    $('lm-resize').style.display='block';
   } else {
     const r=win.getBoundingClientRect();
     lmRestoreRect={left:win.style.left||r.left+'px',top:win.style.top||r.top+'px',width:win.style.width||r.width+'px',height:win.style.height||r.height+'px'};
     win.style.left='0';win.style.top='0';win.style.transform='none';
     win.style.width='100vw';win.style.height='100vh';
     win.classList.remove('minimized');lmMinimized=false;lmMaximized=true;
-    \$('lm-btn-max').title='Restore';\$('lm-btn-max').textContent='❐';
-    \$('lm-resize').style.display='none';
+    $('lm-btn-max').title='Restore';$('lm-btn-max').textContent='❐';
+    $('lm-resize').style.display='none';
   }
 }
-\$('lm-btn-min').onclick=lmMinimize;
-\$('lm-btn-max').onclick=lmMaximize;
-\$('lm-btn-close').onclick=closeLibManager;
-\$('lm-ov').onclick=e=>{if(e.target===\$('lm-ov'))closeLibManager();};
+$('lm-btn-min').onclick=lmMinimize;
+$('lm-btn-max').onclick=lmMaximize;
+$('lm-btn-close').onclick=closeLibManager;
+$('lm-ov').onclick=e=>{if(e.target===$('lm-ov'))closeLibManager();};
 
 // Drag
 (function(){
-  const win=\$('lm-win'),hdr=\$('lm-hdr');
+  const win=$('lm-win'),hdr=$('lm-hdr');
   let drag=false,ox=0,oy=0,wx=0,wy=0;
   hdr.addEventListener('mousedown',e=>{
     if(e.target.classList.contains('lm-wbtn'))return;
@@ -2187,7 +1700,7 @@ function lmMaximize(){
 
 // Resize from SE corner
 (function(){
-  const win=\$('lm-win'),handle=\$('lm-resize');
+  const win=$('lm-win'),handle=$('lm-resize');
   let resizing=false,sx=0,sy=0,sw=0,sh=0;
   handle.addEventListener('mousedown',e=>{
     if(e.button!==0)return;
@@ -2329,7 +1842,7 @@ function buildLibPanel(container,mode,onClickPick,onUsePick){
       const shadeName=entry.name||'';
       const opacity=entry.opacity!=null?entry.opacity:100;
       const [r,gb2,b]=hexToRgb(hex);
-      const rgbaFill=\`rgba(\${r},\${gb2},\${b},\${opacity/100})\`;
+      const rgbaFill=`rgba(${r},${gb2},${b},${opacity/100})`;
       const wrap=document.createElement('div');wrap.className='lib-csw'+(mode==='pick'&&hex===selHex?' sel':'')+(editingColorIdx===i?' editing':'');
       // Box with checkerboard + color fill overlay
       const box=document.createElement('div');box.className='lib-csw-box';box.title=hex+(shadeName?' · '+shadeName:'')+(opacity<100?' · '+opacity+'%':'');
@@ -2362,25 +1875,25 @@ function buildLibPanel(container,mode,onClickPick,onUsePick){
       wrap.onclick=()=>{
         if(mode==='pick'){
           selHex=hex;
-          \$('lm-sel-sw').style.background=rgbaFill;
-          \$('lm-sel-hex').textContent=hex.toUpperCase()+(shadeName?' · '+shadeName:'')+(opacity<100?' · '+opacity+'%':'');
-          \$('lm-use-btn').disabled=false;
+          $('lm-sel-sw').style.background=rgbaFill;
+          $('lm-sel-hex').textContent=hex.toUpperCase()+(shadeName?' · '+shadeName:'')+(opacity<100?' · '+opacity+'%':'');
+          $('lm-use-btn').disabled=false;
           renderColors();
           if(onClickPick)onClickPick(hex);
         } else navigator.clipboard?.writeText(hex);
       };
       cgrid.appendChild(wrap);
     });
-    if(mode==='pick')\$('lm-use-btn').onclick=()=>{if(selHex&&onUsePick)onUsePick(selHex);};
+    if(mode==='pick')$('lm-use-btn').onclick=()=>{if(selHex&&onUsePick)onUsePick(selHex);};
   }
   renderAll();
 }
 
-\$('hl-clear').onclick=clearHL;
-\$('rpal-clear').onclick=clearHL;
+$('hl-clear').onclick=clearHL;
+$('rpal-clear').onclick=clearHL;
 
 // Highlight Mode toggle button
-\$('btn-hl-mode').onclick=function(){
+$('btn-hl-mode').onclick=function(){
   hlMode=!hlMode;
   this.style.background=hlMode?'#cce4f7':'#e1e1e1';
   this.style.borderColor=hlMode?'#0078d4':'#adadad';
@@ -2392,14 +1905,14 @@ function buildLibPanel(container,mode,onClickPick,onUsePick){
 /*━━ RIGHT TABBED PANEL ━━*/
 function rtpSwitch(tab){
   ['lib','cp'].forEach(t=>{
-    \$('rtp-tab-'+t).classList.toggle('on',t===tab);
-    \$('rtp-pane-'+t).classList.toggle('on',t===tab);
+    $('rtp-tab-'+t).classList.toggle('on',t===tab);
+    $('rtp-pane-'+t).classList.toggle('on',t===tab);
   });
 }
 
 /*━━ RIGHT PANEL: COLOR PICKER PANE ━━*/
 function rtpRenderSampled(){
-  const grid=\$('rtp-cp-swatches'),empty=\$('rtp-cp-empty'),count=\$('rtp-count');
+  const grid=$('rtp-cp-swatches'),empty=$('rtp-cp-empty'),count=$('rtp-count');
   grid.innerHTML='';
   count.textContent=sampled.length;
   empty.style.display=sampled.length?'none':'block';
@@ -2417,27 +1930,27 @@ function rtpRenderSampled(){
   rtpUpdateReduceBtn();
 }
 function rtpUpdateReduceBtn(){
-  const btn=\$('rtp-reduce-btn'),msg=\$('rtp-reduce-msg');
+  const btn=$('rtp-reduce-btn'),msg=$('rtp-reduce-msg');
   if(!imgInfo){btn.disabled=true;msg.textContent='Load image first';return;}
   btn.disabled=false;
   if(sampled.length>0){msg.textContent=sampled.length+' picked';}
-  else{const n=parseInt(\$('rtp-reduce-inp').value);msg.textContent=(!isNaN(n)&&n>=2)?'→ '+n:'auto';}
+  else{const n=parseInt($('rtp-reduce-inp').value);msg.textContent=(!isNaN(n)&&n>=2)?'→ '+n:'auto';}
 }
-\$('rtp-reduce-inp').oninput=rtpUpdateReduceBtn;
-\$('rtp-reduce-btn').onclick=()=>{
-  const n=parseInt(\$('rtp-reduce-inp').value);
-  if(!isNaN(n)&&n>=2&&n<=256){cntVal=String(n);\$('cnt-inp').value=n;validateCount(cntVal);}
-  else{cntVal='';\$('cnt-inp').value='';}
+$('rtp-reduce-inp').oninput=rtpUpdateReduceBtn;
+$('rtp-reduce-btn').onclick=()=>{
+  const n=parseInt($('rtp-reduce-inp').value);
+  if(!isNaN(n)&&n>=2&&n<=256){cntVal=String(n);$('cnt-inp').value=n;validateCount(cntVal);}
+  else{cntVal='';$('cnt-inp').value='';}
   doReduce();
 };
-\$('rtp-eye-btn').onclick=()=>{
+$('rtp-eye-btn').onclick=()=>{
   pickerOn=!pickerOn;
-  \$('rtp-eye-btn').textContent=pickerOn?'◉':'◎';
-  \$('rtp-eye-btn').classList.toggle('on',pickerOn);
+  $('rtp-eye-btn').textContent=pickerOn?'◉':'◎';
+  $('rtp-eye-btn').classList.toggle('on',pickerOn);
   updateVpCursor();
-  if(!pickerOn){\$('etip').style.display='none';\$('eye-live').style.display='none';}
+  if(!pickerOn){$('etip').style.display='none';$('eye-live').style.display='none';}
 };
-\$('rtp-clear-btn').onclick=()=>{sampled=[];rtpRenderSampled();updateCpReduceBtn();updateMode();};
+$('rtp-clear-btn').onclick=()=>{sampled=[];rtpRenderSampled();updateCpReduceBtn();updateMode();};
 
 // Keep rtp picker in sync with main sampled state
 const _origRenderSampled=renderSampled;
@@ -2455,16 +1968,16 @@ window.pickAt=function(e,commit){
     if(cx>=0&&cy>=0&&cx<can.width&&cy<can.height){
       const p=can.getContext('2d').getImageData(cx,cy,1,1).data;
       const hex=toHex([p[0],p[1],p[2]]);
-      \$('rtp-cp-sw').style.background=hex;
-      \$('rtp-cp-hex').textContent=hex.toUpperCase();
-      \$('rtp-cp-rgb').textContent='rgb('+p[0]+','+p[1]+','+p[2]+')';
+      $('rtp-cp-sw').style.background=hex;
+      $('rtp-cp-hex').textContent=hex.toUpperCase();
+      $('rtp-cp-rgb').textContent='rgb('+p[0]+','+p[1]+','+p[2]+')';
     }
   }
 };
 /*━━ TOOL → LIBRARY COLOR PICKER ━━*/
 window.libPanelPreferredGroupId=null;
 function buildLibPanel_right(){
-  const grpSel=\$('lib-panel-grp');
+  const grpSel=$('lib-panel-grp');
   const prevId=grpSel.value; // remember current selection
   grpSel.innerHTML='';
   library.forEach(g=>{
@@ -2482,7 +1995,7 @@ function buildLibPanel_right(){
 }
 let _lpEditTarget=null; // {grp, idx}
 function renderLibPanel_right(selGrpId){
-  const scroll=\$('lib-panel-scroll');scroll.innerHTML='';
+  const scroll=$('lib-panel-scroll');scroll.innerHTML='';
   const groups=library.filter(g=>g.id===selGrpId);
   if(!groups.length&&library.length){
     // fallback to first group if selGrpId not found
@@ -2496,7 +2009,7 @@ function renderLibPanel_right(selGrpId){
       const wrap=document.createElement('div');wrap.className='lp-wrap';
       // Swatch
       const sw=document.createElement('div');sw.className='lp-swatch';
-      sw.style.background=\`rgba(\${hexToRgb(hex).join(',')},\${op/100})\`;
+      sw.style.background=`rgba(${hexToRgb(hex).join(',')},${op/100})`;
       sw.title=(name?name+' — ':'')+hex.toUpperCase()+'\nDrag to palette to replace';
       sw.draggable=true;
       sw.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',hex);e.dataTransfer.effectAllowed='copy';sw.classList.add('dragging');});
@@ -2516,7 +2029,7 @@ function renderLibPanel_right(selGrpId){
         e.stopPropagation();
         g.colors.splice(idx,1);libSave();
         if(_lpEditTarget&&_lpEditTarget.grp.id===g.id&&_lpEditTarget.idx===idx)setAddBarMode();
-        renderLibPanel_right(\$('lib-panel-grp').value);
+        renderLibPanel_right($('lib-panel-grp').value);
       };
       acts.appendChild(delBtn);
       sw.appendChild(acts);
@@ -2526,34 +2039,34 @@ function renderLibPanel_right(selGrpId){
   });
 }
 // Group selector change
-\$('lib-panel-grp').onchange=function(){
+$('lib-panel-grp').onchange=function(){
   _lpEditTarget=null;setAddBarMode();
   renderLibPanel_right(this.value);
 };
-\$('lib-panel-new-grp').onclick=openLibGroupCreator;
+$('lib-panel-new-grp').onclick=openLibGroupCreator;
 
 // Unified Add / Edit bar wiring
 function setAddBarMode(){
   _lpEditTarget=null;
-  \$('lp-add-btn').textContent='+ Add';
-  \$('lp-add-btn').classList.remove('edit-mode');
-  \$('lp-edit-cancel').style.display='none';
+  $('lp-add-btn').textContent='+ Add';
+  $('lp-add-btn').classList.remove('edit-mode');
+  $('lp-edit-cancel').style.display='none';
 }
 function setEditBarMode(hex,name,grp,idx){
   _lpEditTarget={grp,idx};
-  \$('lp-add-ci').value=hex;
+  $('lp-add-ci').value=hex;
   
-  \$('lp-add-ni').value=name||'';
-  \$('lp-add-btn').textContent='✓ Update';
-  \$('lp-add-btn').classList.add('edit-mode');
-  \$('lp-edit-cancel').style.display='block';
-  setTimeout(()=>\$('lp-add-ni').focus(),10);
+  $('lp-add-ni').value=name||'';
+  $('lp-add-btn').textContent='✓ Update';
+  $('lp-add-btn').classList.add('edit-mode');
+  $('lp-edit-cancel').style.display='block';
+  setTimeout(()=>$('lp-add-ni').focus(),10);
 }
-\$('lp-add-ci').oninput=function(){};
+$('lp-add-ci').oninput=function(){};
 
-\$('lp-add-btn').onclick=()=>{
-  const h=\$('lp-add-ci').value;if(!isHex(h))return;
-  const n=\$('lp-add-ni').value.trim();
+$('lp-add-btn').onclick=()=>{
+  const h=$('lp-add-ci').value;if(!isHex(h))return;
+  const n=$('lp-add-ni').value.trim();
   if(_lpEditTarget){
     // Edit mode — check duplicates excluding self
     const grp=_lpEditTarget.grp;
@@ -2563,13 +2076,13 @@ function setEditBarMode(hex,name,grp,idx){
     if(dupHex||dupName)return;
     const op=grp.colors[selfIdx].opacity||100;
     grp.colors[selfIdx]={hex:h,name:n,opacity:op};
-    libSave();setAddBarMode();renderLibPanel_right(\$('lib-panel-grp').value);
-    if(\$('lm-ov').classList.contains('open')){
+    libSave();setAddBarMode();renderLibPanel_right($('lib-panel-grp').value);
+    if($('lm-ov').classList.contains('open')){
       const evt=new Event('lm-refresh');document.dispatchEvent(evt);
     }
   } else {
     // Add mode — check duplicates
-    const selId=\$('lib-panel-grp').value;
+    const selId=$('lib-panel-grp').value;
     const g=library.find(x=>x.id===selId)||library[0];
     if(!g)return;
     const dupHex=g.colors.some(e=>(e.hex||e).toLowerCase()===h.toLowerCase());
@@ -2577,21 +2090,21 @@ function setEditBarMode(hex,name,grp,idx){
     if(dupHex||dupName)return;
     g.colors.push({hex:h,name:n,opacity:100});
     libSave();renderLibPanel_right(selId);
-    \$('lp-add-ci').value='#0078d4';\$('lp-add-ni').value='';
+    $('lp-add-ci').value='#0078d4';$('lp-add-ni').value='';
   }
 };
-\$('lp-edit-cancel').onclick=()=>{setAddBarMode();renderLibPanel_right(\$('lib-panel-grp').value);};
+$('lp-edit-cancel').onclick=()=>{setAddBarMode();renderLibPanel_right($('lib-panel-grp').value);};
 
 // Initial render and re-render whenever library changes
 buildLibPanel_right();
 // Hook into libSave to keep panel in sync
 const _origLibSave=libSave;
 window.libSave=function(){_origLibSave();buildLibPanel_right();};
-\$('rpal-dim-inp').oninput=function(){
+$('rpal-dim-inp').oninput=function(){
   hlOpacity=Math.max(0,Math.min(100,parseInt(this.value)||0));
   if(hlColors.length)renderHL();
 };
-\$('hl-opacity-inp').oninput=function(){
+$('hl-opacity-inp').oninput=function(){
   hlOpacity=Math.max(0,Math.min(100,parseInt(this.value)||0));
   if(hlColors.length)renderHL();
 };
@@ -2635,7 +2148,7 @@ function _clearToolHover(){
 }
 function _flashSwatchPicked(){
   const swId=activeTool&&TOOL_SW_IDS[activeTool];if(!swId)return;
-  const sw=\$(swId);if(!sw)return;
+  const sw=$(swId);if(!sw)return;
   sw.style.borderColor='#388e3c';sw.style.boxShadow='0 0 0 2px #c8e6c9';
   setTimeout(()=>{sw.style.borderColor='';sw.style.boxShadow='';},600);
 }
@@ -2652,7 +2165,7 @@ VP.addEventListener('mousemove',e=>{
   const hex=toHex([p[0],p[1],p[2]]);
   _updateToolHover(hex);
   // In pick mode: live-preview the hovered color on the swatch
-  if(_toolSwatchPickMode){const swId=TOOL_SW_IDS[activeTool];if(swId)\$(swId).style.background=hex;}
+  if(_toolSwatchPickMode){const swId=TOOL_SW_IDS[activeTool];if(swId)$(swId).style.background=hex;}
 });
 VP.addEventListener('mouseleave',()=>{if(!_toolSwatchPickMode)_clearToolHover();});
 
@@ -2675,12 +2188,12 @@ VP.addEventListener('mousedown',e=>{
 function _enterSwatchPickMode(){
   if(!imgInfo)return;
   _toolSwatchPickMode=true;
-  ['fill-active-sw','paint-active-sw','outline-active-sw'].forEach(id=>{const el=\$(id);if(el)el.classList.add('picking');});
+  ['fill-active-sw','paint-active-sw','outline-active-sw'].forEach(id=>{const el=$(id);if(el)el.classList.add('picking');});
   VP.style.cursor='crosshair';
 }
 function _exitSwatchPickMode(){
   _toolSwatchPickMode=false;
-  ['fill-active-sw','paint-active-sw','outline-active-sw'].forEach(id=>{const el=\$(id);if(el)el.classList.remove('picking');});
+  ['fill-active-sw','paint-active-sw','outline-active-sw'].forEach(id=>{const el=$(id);if(el)el.classList.remove('picking');});
   VP.style.cursor='';
   updateVpCursor();
   _clearToolHover();
@@ -2700,32 +2213,32 @@ document.addEventListener('keydown',e=>{
 },{capture:true});
 
 /*━━ BINDINGS ━━*/
-const dropEl=\$('drop');
-dropEl.onclick=()=>\$('file-inp').click();
+const dropEl=$('drop');
+dropEl.onclick=()=>$('file-inp').click();
 dropEl.ondragover=e=>{e.preventDefault();dropEl.classList.add('drag');};
 dropEl.ondragleave=()=>dropEl.classList.remove('drag');
 dropEl.ondrop=e=>{e.preventDefault();dropEl.classList.remove('drag');loadFile(e.dataTransfer.files[0]);};
-\$('file-inp').onchange=e=>loadFile(e.target.files[0]);
-\$('cnt-inp').oninput=function(){cntVal=this.value;validateCount(cntVal);applyCountUI();};
+$('file-inp').onchange=e=>loadFile(e.target.files[0]);
+$('cnt-inp').oninput=function(){cntVal=this.value;validateCount(cntVal);applyCountUI();};
 document.querySelectorAll('.tb').forEach(b=>b.onclick=()=>{if(!b.disabled)switchTab(b.dataset.tab);});
-\$('btn-reduce').onclick=doReduce;
-\$('btn-exp').onclick=exportBmp;
-\$('btn-cmap').onclick=openColorMap;
-\$('btn-lib').onclick=()=>openLibWindow('manage');
+$('btn-reduce').onclick=doReduce;
+$('btn-exp').onclick=exportBmp;
+$('btn-cmap').onclick=openColorMap;
+$('btn-lib').onclick=()=>openLibWindow('manage');
 
 /*━━ LIBRARY FILE BUTTON WIRING ━━*/
-\$('lm-btn-save').onclick=libSaveFile;
-\$('lm-btn-load').onclick=()=>{
-  const inp=\$('lm-file-inp');inp.dataset.mode='load';inp.value='';inp.click();
+$('lm-btn-save').onclick=libSaveFile;
+$('lm-btn-load').onclick=()=>{
+  const inp=$('lm-file-inp');inp.dataset.mode='load';inp.value='';inp.click();
 };
-\$('lm-btn-merge').onclick=()=>{
-  const inp=\$('lm-file-inp');inp.dataset.mode='merge';inp.value='';inp.click();
+$('lm-btn-merge').onclick=()=>{
+  const inp=$('lm-file-inp');inp.dataset.mode='merge';inp.value='';inp.click();
 };
-\$('lm-file-inp').onchange=function(){
+$('lm-file-inp').onchange=function(){
   libLoadFile(this.files[0],this.dataset.mode==='merge');
 };
-\$('btn-undo').onclick=doUndo;
-\$('btn-redo').onclick=doRedo;
+$('btn-undo').onclick=doUndo;
+$('btn-redo').onclick=doRedo;
 // Outline group buttons (event delegation — node moves to sidebar)
 document.addEventListener('click',e=>{
   if(e.target&&e.target.id==='ol-group-apply')olApplyGroupOutline();
@@ -2737,16 +2250,14 @@ openToolPopup=function(name){
   _origOpenToolPopup(name);
   if(name==='outline')setTimeout(()=>olRenderStrip(),0);
 };
-['tile','fill','paint','outline'].forEach(t=>\$('ttab-'+t).onclick=()=>setActiveTool(t));
-\$('btn-pan').onclick=()=>{if(imgInfo)setActiveTool(activeTool==='pan'?null:'pan');};
-\$('btn-zo').onclick=()=>setZoom([...ZSTEPS].reverse().find(s=>s<zoomRef.v)||0.1);
-\$('btn-zi').onclick=()=>setZoom(ZSTEPS.find(s=>s>zoomRef.v)||12);
-\$('btn-z1').onclick=()=>{setZoom(1);requestAnimationFrame(()=>{if(imgInfo){VP.scrollLeft=Math.max(0,(imgInfo.w-VP.clientWidth)/2);VP.scrollTop=Math.max(0,(imgInfo.h-VP.clientHeight)/2);}});};
-\$('btn-grid').onclick=()=>{
+['tile','fill','paint','outline'].forEach(t=>$('ttab-'+t).onclick=()=>setActiveTool(t));
+$('btn-pan').onclick=()=>{if(imgInfo)setActiveTool(activeTool==='pan'?null:'pan');};
+$('btn-zo').onclick=()=>setZoom([...ZSTEPS].reverse().find(s=>s<zoomRef.v)||0.1);
+$('btn-zi').onclick=()=>setZoom(ZSTEPS.find(s=>s>zoomRef.v)||12);
+$('btn-z1').onclick=()=>{setZoom(1);requestAnimationFrame(()=>{if(imgInfo){VP.scrollLeft=Math.max(0,(imgInfo.w-VP.clientWidth)/2);VP.scrollTop=Math.max(0,(imgInfo.h-VP.clientHeight)/2);}});};
+$('btn-grid').onclick=()=>{
   gridOn=!gridOn;
-  \$('btn-grid').classList.toggle('on',gridOn);
+  $('btn-grid').classList.toggle('on',gridOn);
   renderGrid();
 };
-window.addEventListener('resize',()=>{if(imgInfo)updateSize();});` }} />
-  );
-}
+window.addEventListener('resize',()=>{if(imgInfo)updateSize();});

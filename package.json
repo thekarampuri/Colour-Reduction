@@ -19,7 +19,7 @@
       "icon": "COLOR REDUCTION APP icon.PNG"
     },
     "directories": {
-      "output": "dist"
+      "output": "release"
     },
     "files": [
       "electron/**/*",

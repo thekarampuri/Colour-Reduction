@@ -15,9 +15,9 @@ if (cssMatch) {
 // Extract JS
 const jsMatch = content.match(/<script>([\s\S]*?)<\/script>/);
 if (jsMatch) {
-  const libDir = path.join(__dirname, 'lib');
-  if (!fs.existsSync(libDir)) fs.mkdirSync(libDir, { recursive: true });
-  fs.writeFileSync(path.join(libDir, 'legacyLogic.js'), jsMatch[1].trim());
+  const publicDir = path.join(__dirname, 'public');
+  if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+  fs.writeFileSync(path.join(publicDir, 'legacyLogic.js'), jsMatch[1].trim());
 }
 
 // Extract HTML
@@ -30,19 +30,13 @@ if (bodyMatch) {
   const componentsDir = path.join(__dirname, 'components');
   if (!fs.existsSync(componentsDir)) fs.mkdirSync(componentsDir, { recursive: true });
 
+  const escapedHtml = htmlContent.replace(/\`/g, '\\`').replace(/\$/g, '\\$');
   const componentCode = `
-import React, { useEffect } from 'react';
+import React from 'react';
 
 export default function LegacyApp() {
-  useEffect(() => {
-    // Dynamically import the legacy logic only on the client side
-    if (typeof window !== 'undefined') {
-      import('../lib/legacyLogic.js').catch(err => console.error("Failed to load legacy logic:", err));
-    }
-  }, []);
-
   return (
-    <div dangerouslySetInnerHTML={{ __html: \`${'`'}\${htmlContent}\`${'`'} }} />
+    <div dangerouslySetInnerHTML={{ __html: \`${escapedHtml}\` }} />
   );
 }
 `;
