@@ -31,8 +31,9 @@ canvas{display:block;image-rendering:pixelated;image-rendering:-moz-crisp-edges;
   padding:6px 10px 5px;
   background:#e8e8e8;
   border-bottom:1px solid #c8c8c8;
-  display:flex;align-items:baseline;gap:6px;
+  display:flex;align-items:center;gap:7px;
 }
+#logo-icon{width:18px;height:18px;object-fit:contain;flex-shrink:0;}
 #logo-title{font-size:13px;font-weight:700;color:#1a1a1a;letter-spacing:.2px;}
 #logo-sub{font-size:10px;color:#888;}
 #sb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;}
@@ -212,6 +213,23 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 #btn-cmap,#btn-lib{flex:1;padding:4px 6px;font-size:11px;display:none;}
 #btn-exp{padding:4px 6px;font-size:11px;display:none;}
 #status{font-size:11px;color:#0078d4;text-align:center;display:none;padding:2px 0;}
+/* Brand logo area at sidebar bottom */
+#sb-brand{
+  flex-shrink:0;
+  background:#e8e8e8;
+  border-top:1px solid #c8c8c8;
+  padding:6px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#sb-brand img{
+  width:100%;
+  max-width:204px;
+  height:auto;
+  display:block;
+  object-fit:contain;
+}
 
 /*━━ RIGHT PANEL ━━*/
 #right{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
@@ -1119,8 +1137,8 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
 <!--━━ SIDEBAR ━━-->
 <div id="sidebar">
   <div id="logo">
+    <img id="logo-icon" src="assets/app-icon.png" alt="" />
     <div id="logo-title">Color Reduction</div>
-    <div id="logo-sub">Color Reduction</div>
   </div>
   <div id="sb-scroll">
 
@@ -1207,7 +1225,7 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
 
   <!-- Brand logo at bottom of sidebar -->
   <div id="sb-brand">
-    <img src="logo/logo.PNG" alt="By Bhagya Lakshmi and Devi Priya" width="140">
+    <img src="assets/logo-panel.png" alt="By Bhagya Lakshmi and Devi Priya" style="width:100%;max-width:200px;height:auto;display:block;">
   </div>
 
 

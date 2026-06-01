@@ -16,16 +16,15 @@
     "productName": "Colour Reduction",
     "win": {
       "target": "nsis",
-      "icon": "COLOR REDUCTION APP icon.PNG"
+      "icon": "assets/app-icon.png"
     },
     "directories": {
       "output": "release"
     },
     "files": [
       "electron/**/*",
+      "assets/**/*",
       "ColorReduction (8).html",
-      "logo/**/*",
-      "COLOR REDUCTION APP icon.PNG",
       "package.json",
       "!node_modules/**"
     ],

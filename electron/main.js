@@ -11,12 +11,11 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, '../COLOR REDUCTION APP icon.PNG')
+    icon: path.join(__dirname, '../assets/app-icon.png')
   });
 
   // Load the original HTML file directly — most reliable approach
   mainWindow.loadFile(path.join(__dirname, '../ColorReduction (8).html'));
-
   // mainWindow.webContents.openDevTools();
 }
 
