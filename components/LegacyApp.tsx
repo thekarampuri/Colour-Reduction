@@ -1,7 +1,16 @@
+"use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export default function LegacyApp() {
+  useEffect(() => {
+    if (document.getElementById('legacy-script')) return;
+    const script = document.createElement('script');
+    script.id = 'legacy-script';
+    script.src = './legacyLogic.js';
+    document.body.appendChild(script);
+  }, []);
+
   return (
     <div dangerouslySetInnerHTML={{ __html: `<div id="app">
 <!--━━ SIDEBAR ━━-->

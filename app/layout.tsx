@@ -16,7 +16,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-        <Script src="./legacyLogic.js" strategy="afterInteractive" />
       </body>
     </html>
   );

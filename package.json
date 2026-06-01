@@ -9,7 +9,7 @@
     "dev:all": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && npm run dev:electron\"",
     "build": "next build",
     "start": "next start",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "electron-builder --win"
   },
   "build": {
     "appId": "com.colourreduction.app",
@@ -23,7 +23,9 @@
     },
     "files": [
       "electron/**/*",
-      "out/**/*",
+      "ColorReduction (8).html",
+      "logo/**/*",
+      "COLOR REDUCTION APP icon.PNG",
       "package.json",
       "!node_modules/**"
     ],
