@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Activate Colour Reduction</title>
+  <style>
+    body {
+      background-color: #0d0f17;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #1a1d2d;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      text-align: center;
+      width: 450px;
+    }
+    h1 { margin-top: 0; font-size: 24px; color: #00c9a7; }
+    p { color: #a0a5b5; font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
+    .machine-id-box {
+      background: #0d0f17;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 25px;
+      border: 1px solid #2d3348;
+      user-select: all;
+      cursor: text;
+    }
+    .input-group {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #a0a5b5;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+      border: 1px solid #2d3348;
+      background: #0d0f17;
+      color: #fff;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: #00c9a7;
+    }
+    button {
+      background: #00c9a7;
+      color: #0d0f17;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    button:hover { background: #00e0ba; }
+    #error-msg {
+      color: #ff5c5c;
+      font-size: 14px;
+      margin-top: 15px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Activation Required</h1>
+    <p>Please send this Machine ID to your administrator to receive your License Key.</p>
+    
+    <div class="machine-id-box" id="machine-id">Loading...</div>
+    
+    <div class="input-group">
+      <label>License Key</label>
+      <input type="text" id="license-key" placeholder="Paste your license key here">
+    </div>
+    
+    <button id="activate-btn">Activate App</button>
+    <div id="error-msg">Invalid License Key. Please try again.</div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    ipcRenderer.invoke('get-machine-id').then(id => {
+      document.getElementById('machine-id').textContent = id;
+    });
+
+    document.getElementById('activate-btn').addEventListener('click', async () => {
+      const key = document.getElementById('license-key').value.trim();
+      if (!key) return;
+      
+      const success = await ipcRenderer.invoke('verify-license', key);
+      if (success) {
+        document.getElementById('error-msg').style.display = 'none';
+        document.getElementById('activate-btn').textContent = 'Activated!';
+        document.getElementById('activate-btn').style.background = '#32cd32';
+      } else {
+        document.getElementById('error-msg').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

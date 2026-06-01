@@ -1,6 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { getMachineId, verifyLicense, saveLicense, loadAndVerify } = require('./license.js');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -17,6 +18,24 @@ function createWindow() {
   // Load the original HTML file directly — most reliable approach
   mainWindow.loadFile(path.join(__dirname, '../ColorReduction (8).html'));
   // mainWindow.webContents.openDevTools();
+}
+
+let activationWindow = null;
+
+function createActivationWindow() {
+  activationWindow = new BrowserWindow({
+    width: 500,
+    height: 450,
+    resizable: false,
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    },
+    icon: path.join(__dirname, '../assets/app-icon.png')
+  });
+
+  activationWindow.loadFile(path.join(__dirname, 'activation.html'));
 }
 
 // IPC: open file dialog (so the file browse button works in Electron context)
@@ -40,11 +59,36 @@ ipcMain.handle('open-file-dialog', async () => {
   };
 });
 
+ipcMain.handle('get-machine-id', () => {
+  return getMachineId();
+});
+
+ipcMain.handle('verify-license', (event, key) => {
+  const id = getMachineId();
+  if (verifyLicense(id, key)) {
+    saveLicense(id, key);
+    createWindow();
+    if (activationWindow) {
+      activationWindow.close();
+      activationWindow = null;
+    }
+    return true;
+  }
+  return false;
+});
+
 app.whenReady().then(() => {
-  createWindow();
+  if (loadAndVerify()) {
+    createWindow();
+  } else {
+    createActivationWindow();
+  }
 
   app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      if (loadAndVerify()) createWindow();
+      else createActivationWindow();
+    }
   });
 });
 
