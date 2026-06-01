@@ -1,18 +1,15 @@
 {
   "name": "colour-reduction",
   "version": "1.0.0",
-  "description": "Colour Reduction Electron App",
-  "main": "main.js",
+  "private": true,
+  "main": "electron/main.js",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "electron": "^29.0.0",
-    "electron-builder": "^24.9.1"
+    "dev": "next dev",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "dev:all": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && npm run dev:electron\"",
+    "build": "next build",
+    "start": "next start",
+    "dist": "npm run build && electron-builder --win"
   },
   "build": {
     "appId": "com.colourreduction.app",
@@ -21,9 +18,38 @@
       "target": "nsis",
       "icon": "COLOR REDUCTION APP icon.PNG"
     },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "out/**/*",
+      "package.json",
+      "!node_modules/**"
+    ],
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     }
+  },
+  "dependencies": {
+    "lucide-react": "^0.359.0",
+    "next": "^14.1.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/react": "^18.2.67",
+    "@types/react-dom": "^18.2.22",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^29.1.6",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.3",
+    "wait-on": "^7.2.0"
   }
 }
