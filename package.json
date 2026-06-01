@@ -13,5 +13,17 @@
   "devDependencies": {
     "electron": "^29.0.0",
     "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.colourreduction.app",
+    "productName": "Colour Reduction",
+    "win": {
+      "target": "nsis",
+      "icon": "COLOR REDUCTION APP icon.PNG"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
