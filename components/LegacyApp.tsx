@@ -376,7 +376,7 @@ export default function LegacyApp() {
 <!--━━ COLOR MAP ━━-->
 <div class="ov" id="cm-ov">
   <div class="mwin" id="cm-win">
-    <div class="mhdr">
+    <div class="mhdr" id="cm-hdr">
       <div class="mtitle">Color Map <span id="cm-badge" style="font-size:10px;color:#888;font-weight:400;margin-left:6px"></span></div>
       <button class="mclose" id="cm-close">✕</button>
     </div>
@@ -389,9 +389,9 @@ export default function LegacyApp() {
     <div id="cm-list"><div class="cm-empty">Reduce an image first</div></div>
     <div class="mfoot">
       <button class="win-btn primary" id="cm-apply-all">Apply All</button>
-      <button class="win-btn" id="cm-reset">↺ Reset</button>
       <div class="mfoot-note" id="cm-fnote"></div>
     </div>
+    <div id="cm-resize"></div>
   </div>
 </div>
 
