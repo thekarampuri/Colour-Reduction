@@ -37,7 +37,7 @@ function createWindow() {
 
   // Load the original HTML file directly — most reliable approach
   mainWindow.loadFile(path.join(__dirname, '../ColorReduction (8).html'));
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 }
 
 let activationWindow = null;
