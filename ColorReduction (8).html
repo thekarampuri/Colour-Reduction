@@ -1113,8 +1113,7 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 body.activation-locked #app{pointer-events:none;filter:blur(1px);}
 </style>
 </head>
-<!-- <body class="activation-locked">
-<div id="activation-gate">
+<div id="activation-gate" class="hidden">
   <div id="activation-box">
     <div id="activation-title">License Required</div>
     <div id="activation-note">Share this Machine ID, then enter the license key generated for this machine.</div>
@@ -1131,7 +1130,7 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
       <div id="activation-error"></div>
     </div>
   </div>
-</div> -->
+</div>
 <div id="app">
 
 <!--━━ SIDEBAR ━━-->
@@ -1509,6 +1508,7 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
     </div>
     <div id="cm-list"><div class="cm-empty">Reduce an image first</div></div>
     <div class="mfoot">
+      <button class="win-btn" id="cm-reset">Reset</button>
       <button class="win-btn primary" id="cm-apply-all">Apply All</button>
       <div class="mfoot-note" id="cm-fnote"></div>
     </div>
@@ -1628,7 +1628,8 @@ function uid(){return Math.random().toString(36).slice(2,9);}
 
 function unlockApp(){
   document.body.classList.remove('activation-locked');
-  $('activation-gate').classList.add('hidden');
+  const g=$('activation-gate');
+  if(g)g.classList.add('hidden');
 }
 async function initActivationGate(){
   const gate=$('activation-gate');
@@ -1641,46 +1642,49 @@ async function initActivationGate(){
   if(window.license){
     try{
       const info=await window.license.getInfo();
-      machineId=info.machineId||machineId;
-      licensed=!!info.licensed;
+      machineId=(info&&info.machineId)||machineId;
+      licensed=!!(info&&info.licensed);
     }catch(e){
       console.error('Machine ID generation failed:', e);
-      error.textContent='Unable to read Machine ID';
+      if(error)error.textContent='Unable to read Machine ID';
     }
   }
 
-  hwIdEl.textContent=machineId;
+  if(hwIdEl)hwIdEl.textContent=machineId;
   if(licensed){unlockApp();return;}
-  gate.classList.remove('hidden');
-  setTimeout(()=>input.focus(),0);
-  $('activation-copy').onclick=async()=>{
+  // Only show gate if not licensed
+  if(gate)gate.classList.remove('hidden');
+  if(input)setTimeout(()=>input.focus(),0);
+  const copyBtn=$('activation-copy');
+  if(copyBtn)copyBtn.onclick=async()=>{
     try{
       await navigator.clipboard.writeText(machineId);
-      error.textContent='Machine ID copied';
+      if(error)error.textContent='Machine ID copied';
     }catch(e){
-      error.textContent='Copy failed';
+      if(error)error.textContent='Copy failed';
     }
   };
   const tryActivate=async()=>{
     if(!window.license){
-      error.textContent='License check requires the desktop app';
+      if(error)error.textContent='License check requires the desktop app';
       return;
     }
     try{
-      const result=await window.license.validate(input.value);
-      if(result.ok){
-        error.textContent='';
+      const result=await window.license.validate(input?input.value:'');
+      if(result&&result.ok){
+        if(error)error.textContent='';
         unlockApp();
         return;
       }
     }catch(e){
       console.error('License validation failed:', e);
     }
-    error.textContent='Invalid license key';
-    input.select();
+    if(error)error.textContent='Invalid license key';
+    if(input)input.select();
   };
-  $('activation-btn').onclick=tryActivate;
-  input.onkeydown=e=>{if(e.key==='Enter')tryActivate();};
+  const activateBtn=$('activation-btn');
+  if(activateBtn)activateBtn.onclick=tryActivate;
+  if(input)input.onkeydown=e=>{if(e.key==='Enter')tryActivate();};
 }
 initActivationGate();
 
@@ -2473,20 +2477,20 @@ function applyCountUI(){
 }
 
 /*━━ FILE LOAD ━━*/
-function loadFile(file){
-  if(!file)return;const reader=new FileReader();
-  reader.onload=ev=>{const img=new Image();img.onload=()=>{
+function loadImageFromDataUrl(dataUrl, name, filePath){
+  const img=new Image();
+  img.onload=()=>{
     const w=img.naturalWidth,h=img.naturalHeight;
     CO.width=w;CO.height=h;const ctx=CO.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage(img,0,0,w,h);
     CR.width=w;CR.height=h;CR.getContext('2d').clearRect(0,0,w,h);
     CH.width=w;CH.height=h;
     const unique=countUnique(ctx.getImageData(0,0,w,h).data);
-    imgInfo={w,h,name:file.name,path:file.path,unique,originalUnique:unique,reducedUnique:null};
+    imgInfo={w,h,name,path:filePath,unique,originalUnique:unique,reducedUnique:null};
     palette=[];palOrig=[];reducedData=null;reducedW=0;reducedH=0;
     sampled=[];cntVal='';cntErr='';
     undoStack=[];redoStack=[];tileActive=false;activeTool=null;
     $('tile-x').value=1;$('tile-y').value=1;$('tile-info').textContent='';
-    $('drop').innerHTML='<div id="drop-icon" style="font-size:18px;opacity:.25;margin-bottom:2px">📄</div><div style="font-size:11px;color:#555">'+file.name+'</div>';
+    $('drop').innerHTML='<div id="drop-icon" style="font-size:18px;opacity:.25;margin-bottom:2px">📄</div><div style="font-size:11px;color:#555">'+name+'</div>';
     $('fstats').style.display='flex';$('ss').textContent=w+'×'+h;$('su').textContent=unique.toLocaleString();
     const inp=$('cnt-inp');inp.disabled=false;inp.value='';inp.max=256;inp.placeholder='2–'+Math.min(256,unique-1);inp.className='win-inp';
     if(unique>256){
@@ -2505,8 +2509,16 @@ function loadFile(file){
     updateHistUI();setActiveTool(null);
     switchTab('orig');setZoom(1);showCanvas();CO.style.display='block';CR.style.display='none';CH.style.display='none';
     updateMode();
-  };img.onerror=()=>alert('Cannot decode image');img.src=ev.target.result;};
-  reader.onerror=()=>alert('Cannot read file');reader.readAsDataURL(file);
+  };
+  img.onerror=()=>alert('Cannot decode image');
+  img.src=dataUrl;
+}
+function loadFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>loadImageFromDataUrl(ev.target.result,file.name,file.path);
+  reader.onerror=()=>alert('Cannot read file');
+  reader.readAsDataURL(file);
 }
 
 /*━━ REDUCE ━━*/
@@ -3849,11 +3861,32 @@ document.addEventListener('keydown',e=>{
 },{capture:true});
 
 /*━━ BINDINGS ━━*/
+// Prevent Electron from navigating when a file is dragged onto the window
+document.addEventListener('dragover',e=>e.preventDefault(),false);
+document.addEventListener('drop',e=>e.preventDefault(),false);
+
 const dropEl=$('drop');
-dropEl.onclick=()=>$('file-inp').click();
-dropEl.ondragover=e=>{e.preventDefault();dropEl.classList.add('drag');};
+dropEl.onclick=async ()=>{
+  if(window.electronAPI&&window.electronAPI.openFileDialog){
+    const result=await window.electronAPI.openFileDialog();
+    if(!result)return;
+    loadImageFromDataUrl(result.dataUrl,result.name,result.path);
+  } else {
+    const inp=$('file-inp');inp.value='';inp.click();
+  }
+};
+dropEl.ondragover=e=>{e.stopPropagation();e.preventDefault();dropEl.classList.add('drag');};
 dropEl.ondragleave=()=>dropEl.classList.remove('drag');
-dropEl.ondrop=e=>{e.preventDefault();dropEl.classList.remove('drag');loadFile(e.dataTransfer.files[0]);};
+dropEl.ondrop=async e=>{
+  e.stopPropagation();e.preventDefault();dropEl.classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(!file)return;
+  if(window.electronAPI&&window.electronAPI.readFilePath&&file.path){
+    const result=await window.electronAPI.readFilePath(file.path);
+    if(result){loadImageFromDataUrl(result.dataUrl,result.name,result.path);return;}
+  }
+  loadFile(file);
+};
 $('file-inp').onchange=e=>loadFile(e.target.files[0]);
 $('cnt-inp').oninput=function(){cntVal=this.value;validateCount(cntVal);applyCountUI();};
 document.querySelectorAll('.tb').forEach(b=>b.onclick=()=>{if(!b.disabled)switchTab(b.dataset.tab);});

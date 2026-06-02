@@ -2710,7 +2710,7 @@ document.addEventListener('keydown',e=>{
 
 /*━━ BINDINGS ━━*/
 const dropEl=\$('drop');
-dropEl.onclick=()=>\$('file-inp').click();
+dropEl.onclick=()=>{ const inp=\$('file-inp'); inp.value=''; inp.click(); };
 dropEl.ondragover=e=>{e.preventDefault();dropEl.classList.add('drag');};
 dropEl.ondragleave=()=>dropEl.classList.remove('drag');
 dropEl.ondrop=e=>{e.preventDefault();dropEl.classList.remove('drag');loadFile(e.dataTransfer.files[0]);};

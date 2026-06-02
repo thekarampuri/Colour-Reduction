@@ -16,8 +16,10 @@ function ensureLibFolders() {
   }
 }
 
+let mainWindow = null;
+
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     webPreferences: {
@@ -28,9 +30,14 @@ function createWindow() {
     icon: path.join(__dirname, '../assets/app-icon.png')
   });
 
+  // Prevent Electron from navigating when files are dragged onto the window
+  mainWindow.webContents.on('will-navigate', (event) => {
+    event.preventDefault();
+  });
+
   // Load the original HTML file directly — most reliable approach
   mainWindow.loadFile(path.join(__dirname, '../ColorReduction (8).html'));
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 }
 
 let activationWindow = null;
@@ -51,9 +58,27 @@ function createActivationWindow() {
   activationWindow.loadFile(path.join(__dirname, 'activation.html'));
 }
 
+// IPC: read a file by path (used for reliable drag-and-drop in Electron)
+ipcMain.handle('read-file-path', async (event, filePath) => {
+  try {
+    const buffer = fs.readFileSync(filePath);
+    const base64 = buffer.toString('base64');
+    const ext = path.extname(filePath).slice(1).toLowerCase();
+    const mimeMap = { bmp: 'image/bmp', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
+    const mime = mimeMap[ext] || 'image/png';
+    return {
+      name: path.basename(filePath),
+      path: filePath,
+      dataUrl: `data:${mime};base64,${base64}`
+    };
+  } catch (e) {
+    return null;
+  }
+});
+
 // IPC: open file dialog (so the file browse button works in Electron context)
 ipcMain.handle('open-file-dialog', async () => {
-  const result = await dialog.showOpenDialog({
+  const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
     filters: [
       { name: 'Images', extensions: ['bmp', 'png', 'jpg', 'jpeg', 'gif', 'webp'] }

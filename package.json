@@ -1,15 +1,15 @@
 {
   "name": "colour-reduction",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm version patch --no-git-tag-version && next dev",
     "dev:electron": "cross-env NODE_ENV=development electron .",
     "dev:all": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && npm run dev:electron\"",
     "build": "next build",
     "start": "next start",
-    "dist": "electron-builder --win"
+    "dist": "npm version patch --no-git-tag-version && node -e \"const fs=require('fs');const p='release';if(fs.existsSync(p)){fs.readdirSync(p).filter(f=>f.endsWith('.exe')||f.endsWith('.blockmap')||f.endsWith('.yaml')).forEach(f=>fs.rmSync(p+'/'+f,{force:true}));}\" && electron-builder --win"
   },
   "build": {
     "appId": "com.colourreduction.app",
