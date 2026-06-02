@@ -3,14 +3,18 @@ const path = require('path');
 const fs = require('fs');
 const { getMachineId, verifyLicense, saveLicense, loadAndVerify } = require('./license.js');
 
-const LIB_ROOT = path.join('C:\\', 'Color Reduction');
+function getLibRoot() {
+  return path.join(app.getPath('userData'), 'Libraries');
+}
 
 function ensureLibFolders() {
-  if (!fs.existsSync(LIB_ROOT)) {
-    fs.mkdirSync(LIB_ROOT, { recursive: true });
+  const libRoot = getLibRoot();
+  if (!fs.existsSync(libRoot)) {
+    fs.mkdirSync(libRoot, { recursive: true });
   }
+
   // Create a default library group folder
-  const defaultLib = path.join(LIB_ROOT, 'Default Library');
+  const defaultLib = path.join(libRoot, 'Default Library');
   if (!fs.existsSync(defaultLib)) {
     fs.mkdirSync(defaultLib, { recursive: true });
   }
@@ -123,12 +127,13 @@ ipcMain.handle('save-exported-image', async (event, base64data, defaultName, sou
 ipcMain.handle('get-libraries', () => {
   ensureLibFolders();
   const library = [];
+  const libRoot = getLibRoot();
   
-  const items = fs.readdirSync(LIB_ROOT, { withFileTypes: true });
+  const items = fs.readdirSync(libRoot, { withFileTypes: true });
   for (const item of items) {
     if (item.isDirectory()) {
       const groupName = item.name;
-      const groupPath = path.join(LIB_ROOT, groupName);
+      const groupPath = path.join(libRoot, groupName);
       const jsonPath = path.join(groupPath, 'colors.json');
       
       let colors = [];
@@ -153,11 +158,12 @@ ipcMain.handle('get-libraries', () => {
 
 ipcMain.handle('save-library', (event, groups) => {
   ensureLibFolders();
+  const libRoot = getLibRoot();
   // We expect 'groups' to be the full library array from the frontend.
   // We will sync it to the file system.
   
   // First, get existing folders to delete any removed groups
-  const existingItems = fs.readdirSync(LIB_ROOT, { withFileTypes: true });
+  const existingItems = fs.readdirSync(libRoot, { withFileTypes: true });
   const existingFolders = existingItems.filter(i => i.isDirectory()).map(i => i.name);
   
   const currentGroupNames = groups.map(g => g.name);
@@ -165,7 +171,7 @@ ipcMain.handle('save-library', (event, groups) => {
   // Delete folders that no longer exist in the library
   for (const folder of existingFolders) {
     if (!currentGroupNames.includes(folder)) {
-      const folderPath = path.join(LIB_ROOT, folder);
+      const folderPath = path.join(libRoot, folder);
       fs.rmSync(folderPath, { recursive: true, force: true });
     }
   }
@@ -173,7 +179,7 @@ ipcMain.handle('save-library', (event, groups) => {
   // Save each group
   for (const group of groups) {
     const safeName = group.name.replace(/[<>:"/\\|?*]/g, '_');
-    const groupPath = path.join(LIB_ROOT, safeName);
+    const groupPath = path.join(libRoot, safeName);
     if (!fs.existsSync(groupPath)) {
       fs.mkdirSync(groupPath, { recursive: true });
     }
@@ -185,8 +191,9 @@ ipcMain.handle('save-library', (event, groups) => {
 
 // We can remove delete-library since save-library handles sync, or keep it for individual deletes.
 ipcMain.handle('delete-library', (event, { groupName }) => {
+  const libRoot = getLibRoot();
   const safeName = groupName.replace(/[<>:"/\\|?*]/g, '_');
-  const folderPath = path.join(LIB_ROOT, safeName);
+  const folderPath = path.join(libRoot, safeName);
   if (fs.existsSync(folderPath)) {
     fs.rmSync(folderPath, { recursive: true, force: true });
     return true;
