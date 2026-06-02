@@ -746,6 +746,8 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 }
 .cmr:hover{border-color:#0078d4;}
 .cmr.replaced{border-color:#388e3c;background:#f8fff8;}
+.cmr.hl-on .cm-sw{border-color:#1a1a1a;box-shadow:0 0 0 1px #fff,0 0 0 3px #1a1a1a;}
+.cmr.hl-on .cm-hex{color:#0078d4;}
 .cm-sw{width:42px;height:42px;border:1px solid rgba(0,0,0,.12);flex-shrink:0;cursor:pointer;transition:transform .1s;}
 .cm-sw:hover{transform:scale(1.07);}
 .cm-hex{font-size:11px;font-weight:600;color:#333;font-family:monospace;}
@@ -1508,6 +1510,7 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
     </div>
     <div id="cm-list"><div class="cm-empty">Reduce an image first</div></div>
     <div class="mfoot">
+      <button id="cm-btn-hl-mode" style="padding:2px 7px;font-size:10px;background:#e1e1e1;border:1px solid #adadad;border-radius:2px;cursor:pointer;color:#555;transition:all .12s;white-space:nowrap;" title="Toggle Highlight Mode — then click a swatch to highlight it on canvas">🔦 Highlight</button>
       <button class="win-btn" id="cm-reset">Reset</button>
       <button class="win-btn primary" id="cm-apply-all">Apply All</button>
       <div class="mfoot-note" id="cm-fnote"></div>
@@ -2421,11 +2424,24 @@ $('ctx-lib').onclick=()=>{
 };
 
 /*━━ HIGHLIGHT OVERLAY — multi-selection ━━*/
+function updateCmHlState(){
+  if(!$('cm-ov').classList.contains('open'))return;
+  document.querySelectorAll('#cm-list .cmr').forEach(row=>{
+    row.style.cursor=hlMode?'pointer':'';
+    if(row._rgb){
+      if(isHlActive(row._rgb))row.classList.add('hl-on');
+      else row.classList.remove('hl-on');
+      const sw=row.querySelector('.cm-sw');
+      if(sw)sw.title=hlMode?'Highlight '+toHex(row._rgb):'Copy '+toHex(row._rgb);
+    }
+  });
+}
 function toggleHlColor(rgb){
   const idx=hlColors.findIndex(h=>colorsMatch(h,rgb));
   if(idx>=0)hlColors.splice(idx,1); else hlColors.push(rgb);
   updateSize();renderHL();
   renderPalette(palette,palPcts);
+  updateCmHlState();
   if(curTab==='reduced')CH.style.display=hlColors.length?'block':'none';
 }
 function clearHL(){
@@ -2433,10 +2449,24 @@ function clearHL(){
   CH.getContext('2d').clearRect(0,0,CH.width,CH.height);
   CH.style.display='none';
   renderPalette(palette,palPcts);
-  // Reset highlight mode button
-  hlMode=false;
-  const btn=$('btn-hl-mode');
-  if(btn){btn.style.background='#e1e1e1';btn.style.borderColor='#adadad';btn.style.color='#555';btn.style.fontWeight='400';}
+  updateCmHlState();
+  toggleHighlightMode(false);
+}
+function toggleHighlightMode(forceState){
+  if(forceState===undefined&&!imgInfo)return;
+  if(forceState!==undefined)hlMode=forceState; else hlMode=!hlMode;
+  const applyStyle=btn=>{
+    if(!btn)return;
+    btn.style.background=hlMode?'#cce4f7':'#e1e1e1';
+    btn.style.borderColor=hlMode?'#0078d4':'#adadad';
+    btn.style.color=hlMode?'#005a9e':'#555';
+    btn.style.fontWeight=hlMode?'700':'400';
+    btn.title=hlMode?'Highlight Mode ON — click a swatch to highlight':'Toggle Highlight Mode — then click a swatch to highlight it on canvas';
+  };
+  applyStyle($('btn-hl-mode'));
+  applyStyle($('cm-btn-hl-mode'));
+  renderPalette(palette,palPcts);
+  updateCmHlState();
 }
 function renderHL(){
   if(!hlColors.length||!imgInfo){CH.style.display='none';return;}
@@ -3213,8 +3243,15 @@ function buildCmRows(){
   let rCount=0;
   order.forEach((palIdx,rowIdx)=>{
     const origRgb=palette[palIdx],hex=toHex(origRgb),px=counts[palIdx]||0,pct=total>0?(px/total*100):0;
-    const row=document.createElement('div');row.className='cmr';
-    const sw=document.createElement('div');sw.className='cm-sw';sw.style.background=hex;sw.title='Copy '+hex;sw.onclick=()=>navigator.clipboard?.writeText(hex);
+    const row=document.createElement('div');row.className='cmr'+(isHlActive(origRgb)?' hl-on':'');
+    row._rgb=origRgb;
+    row.onclick=(e)=>{
+      if(e.target.closest('input,button,.cm-sw'))return;
+      if(hlMode)toggleHlColor(origRgb);
+    };
+    const sw=document.createElement('div');sw.className='cm-sw';sw.style.background=hex;
+    sw.title=hlMode?'Highlight '+hex:'Copy '+hex;
+    sw.onclick=()=>{if(hlMode){toggleHlColor(origRgb);}else{navigator.clipboard?.writeText(hex);}};
     const info=document.createElement('div');info.innerHTML='<div class="cm-hex">'+hex.toUpperCase()+'</div><div class="cm-rgb">rgb('+origRgb.join(', ')+')</div>';
     const pw=document.createElement('div');const bt=document.createElement('div');bt.className='cm-bar-track';const bf=document.createElement('div');bf.className='cm-bar-fill';bf.style.background=hex;bt.appendChild(bf);const pl=document.createElement('div');pl.className='cm-pct-line';pl.innerHTML='<span class="cm-pct-big">'+pct.toFixed(1)+'%</span><span class="cm-pct-sm">coverage</span><span class="cm-px"> · '+px.toLocaleString()+' px</span>';pw.appendChild(bt);pw.appendChild(pl);
     requestAnimationFrame(()=>setTimeout(()=>{bf.style.width=(px/maxC*100).toFixed(1)+'%';},40+rowIdx*14));
@@ -3541,14 +3578,8 @@ $('hl-clear').onclick=clearHL;
 $('rpal-clear').onclick=clearHL;
 
 // Highlight Mode toggle button
-$('btn-hl-mode').onclick=function(){
-  hlMode=!hlMode;
-  this.style.background=hlMode?'#cce4f7':'#e1e1e1';
-  this.style.borderColor=hlMode?'#0078d4':'#adadad';
-  this.style.color=hlMode?'#005a9e':'#555';
-  this.style.fontWeight=hlMode?'700':'400';
-  this.title=hlMode?'Highlight Mode ON — click a swatch to highlight':'Toggle Highlight Mode — then click a swatch to highlight it on canvas';
-};
+$('btn-hl-mode').onclick=()=>toggleHighlightMode();
+if($('cm-btn-hl-mode'))$('cm-btn-hl-mode').onclick=()=>toggleHighlightMode();
 
 /*━━ RIGHT TABBED PANEL ━━*/
 function rtpSwitch(tab){
