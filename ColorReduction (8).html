@@ -1739,15 +1739,12 @@ function floodFill(px,py,fillRgb,canvas){
 }
 
 /*━━ LIBRARY STATE ━━*/
-let libraryFolderPath = '';
+let libraryFolderPath = 'C:\\Color Reduction';
 
-function libLoad() {
+async function libLoad() {
   try {
-    if (window.paletteLibrary) {
-      const result = window.paletteLibrary.load();
-      if (!result.ok) throw new Error(result.error || 'Unable to load palette library');
-      libraryFolderPath = result.folder || '';
-      return result.library;
+    if (window.electronAPI && window.electronAPI.getLibraries) {
+      return await window.electronAPI.getLibraries();
     }
     return JSON.parse(localStorage.getItem('bms_lib5') || 'null');
   } catch (e) {
@@ -1758,9 +1755,8 @@ function libLoad() {
 
 async function libSave() {
   try {
-    if (window.paletteLibrary) {
-      const result = await window.paletteLibrary.save(library);
-      libraryFolderPath = result.folder || libraryFolderPath;
+    if (window.electronAPI && window.electronAPI.saveLibrary) {
+      await window.electronAPI.saveLibrary(library);
     } else {
       localStorage.setItem('bms_lib5', JSON.stringify(library));
     }
@@ -1771,13 +1767,15 @@ async function libSave() {
 
 async function initLibraryFolder() {
   try {
-    const loaded = libLoad();
-    if (loaded) {
+    const loaded = await libLoad();
+    if (loaded && loaded.length > 0) {
       library = loaded;
       libMigrate(library);
       buildLibPanel_right();
+      libShowStatus('Folder connected ✓', 'ok');
+    } else {
+      libSave();
     }
-    libShowStatus('Folder connected ✓', 'ok');
   } catch (e) {
     console.error('Library folder load failed:', e);
     libShowStatus('Folder load failed', 'err');
@@ -1860,9 +1858,14 @@ function libMigrate(lib){
   lib.forEach(g=>{g.colors=g.colors.map(c=>typeof c==='string'?{hex:c,name:'',opacity:100}:Object.assign({opacity:100},c));});
   return lib;
 }
-let library=libLoad();
-if(library)libMigrate(library);
-if(!library){library=[
+
+let library = [];
+let localLib = JSON.parse(localStorage.getItem('bms_lib5') || 'null');
+if (localLib) {
+  library = localLib;
+  libMigrate(library);
+} else {
+  library = [
   {id:uid(),name:'Warm',colors:[
     {hex:'#ff6b35',name:'Flame',opacity:100},    {hex:'#e63946',name:'Crimson',opacity:100},
     {hex:'#f4a261',name:'Sandy',opacity:100},    {hex:'#e76f51',name:'Coral',opacity:100},
@@ -1890,6 +1893,8 @@ if(!library){library=[
   ]},
   {id:uid(),name:'Custom',colors:[]}
 ];libSave();}
+
+initLibraryFolder();
 
 /*━━ APP STATE ━━*/
 const CO=$('co'),CR=$('cr'),CH=$('ch');
@@ -2476,7 +2481,7 @@ function loadFile(file){
     CR.width=w;CR.height=h;CR.getContext('2d').clearRect(0,0,w,h);
     CH.width=w;CH.height=h;
     const unique=countUnique(ctx.getImageData(0,0,w,h).data);
-    imgInfo={w,h,name:file.name,unique,originalUnique:unique,reducedUnique:null};
+    imgInfo={w,h,name:file.name,path:file.path,unique,originalUnique:unique,reducedUnique:null};
     palette=[];palOrig=[];reducedData=null;reducedW=0;reducedH=0;
     sampled=[];cntVal='';cntErr='';
     undoStack=[];redoStack=[];tileActive=false;activeTool=null;
@@ -2555,7 +2560,21 @@ function canvasToBmp(canvas,filename){
   const rs=Math.floor((w*3+3)/4)*4,ps=rs*h,fs=54+ps,buf=new ArrayBuffer(fs),view=new DataView(buf);
   view.setUint8(0,0x42);view.setUint8(1,0x4D);view.setUint32(2,fs,true);view.setUint32(6,0,true);view.setUint32(10,54,true);view.setUint32(14,40,true);view.setInt32(18,w,true);view.setInt32(22,-h,true);view.setUint16(26,1,true);view.setUint16(28,24,true);view.setUint32(30,0,true);view.setUint32(34,ps,true);view.setInt32(38,2835,true);view.setInt32(42,2835,true);
   let off=54;for(let y=0;y<h;y++){for(let x=0;x<w;x++){const s=(y*w+x)*4;view.setUint8(off++,d[s+2]);view.setUint8(off++,d[s+1]);view.setUint8(off++,d[s]);}for(let p=0;p<(rs-w*3);p++)view.setUint8(off++,0);}
-  const blob=new Blob([buf],{type:'image/bmp'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename||'output.bmp';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const blob=new Blob([buf],{type:'image/bmp'});
+  if (window.electronAPI && window.electronAPI.saveExportedImage) {
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const base64data = reader.result.split(',')[1];
+      const success = await window.electronAPI.saveExportedImage(base64data, filename || 'output.bmp', imgInfo && imgInfo.path);
+      if (success) {
+        const sl=$('status');sl.textContent='Saved ✓';sl.style.display='block';
+        setTimeout(()=>sl.style.display='none', 2000);
+      }
+    };
+    reader.readAsDataURL(blob);
+  } else {
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename||'output.bmp';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
 }
 function exportBmp(){canvasToBmp(curTab==='reduced'?CR:CO,`reduced_${palette.length}colors.bmp`);}
 

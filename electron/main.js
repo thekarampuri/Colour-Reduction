@@ -3,6 +3,19 @@ const path = require('path');
 const fs = require('fs');
 const { getMachineId, verifyLicense, saveLicense, loadAndVerify } = require('./license.js');
 
+const LIB_ROOT = path.join('C:\\', 'Color Reduction');
+
+function ensureLibFolders() {
+  if (!fs.existsSync(LIB_ROOT)) {
+    fs.mkdirSync(LIB_ROOT, { recursive: true });
+  }
+  // Create a default library group folder
+  const defaultLib = path.join(LIB_ROOT, 'Default Library');
+  if (!fs.existsSync(defaultLib)) {
+    fs.mkdirSync(defaultLib, { recursive: true });
+  }
+}
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -55,9 +68,107 @@ ipcMain.handle('open-file-dialog', async () => {
   const mime = mimeMap[ext] || 'image/png';
   return {
     name: path.basename(filePath),
+    path: filePath,
     dataUrl: `data:${mime};base64,${base64}`
   };
 });
+
+ipcMain.handle('save-exported-image', async (event, base64data, defaultName, sourcePath) => {
+  let defaultPath = defaultName;
+  if (sourcePath) {
+    const dir = path.dirname(sourcePath);
+    defaultPath = path.join(dir, defaultName);
+  }
+  
+  const result = await dialog.showSaveDialog({
+    defaultPath: defaultPath,
+    filters: [
+      { name: 'Bitmap Image', extensions: ['bmp'] }
+    ]
+  });
+  
+  if (result.canceled || !result.filePath) return false;
+  
+  fs.writeFileSync(result.filePath, Buffer.from(base64data, 'base64'));
+  return true;
+});
+
+
+// --- IPC: Library Management ---
+ipcMain.handle('get-libraries', () => {
+  ensureLibFolders();
+  const library = [];
+  
+  const items = fs.readdirSync(LIB_ROOT, { withFileTypes: true });
+  for (const item of items) {
+    if (item.isDirectory()) {
+      const groupName = item.name;
+      const groupPath = path.join(LIB_ROOT, groupName);
+      const jsonPath = path.join(groupPath, 'colors.json');
+      
+      let colors = [];
+      if (fs.existsSync(jsonPath)) {
+        try {
+          const content = fs.readFileSync(jsonPath, 'utf8');
+          colors = JSON.parse(content);
+        } catch (err) {
+          console.error(`Failed to parse colors.json in ${groupName}`, err);
+        }
+      }
+      
+      library.push({
+        id: Buffer.from(groupName).toString('base64').substring(0, 8),
+        name: groupName,
+        colors: colors
+      });
+    }
+  }
+  return library;
+});
+
+ipcMain.handle('save-library', (event, groups) => {
+  ensureLibFolders();
+  // We expect 'groups' to be the full library array from the frontend.
+  // We will sync it to the file system.
+  
+  // First, get existing folders to delete any removed groups
+  const existingItems = fs.readdirSync(LIB_ROOT, { withFileTypes: true });
+  const existingFolders = existingItems.filter(i => i.isDirectory()).map(i => i.name);
+  
+  const currentGroupNames = groups.map(g => g.name);
+  
+  // Delete folders that no longer exist in the library
+  for (const folder of existingFolders) {
+    if (!currentGroupNames.includes(folder)) {
+      const folderPath = path.join(LIB_ROOT, folder);
+      fs.rmSync(folderPath, { recursive: true, force: true });
+    }
+  }
+
+  // Save each group
+  for (const group of groups) {
+    const safeName = group.name.replace(/[<>:"/\\|?*]/g, '_');
+    const groupPath = path.join(LIB_ROOT, safeName);
+    if (!fs.existsSync(groupPath)) {
+      fs.mkdirSync(groupPath, { recursive: true });
+    }
+    const jsonPath = path.join(groupPath, 'colors.json');
+    fs.writeFileSync(jsonPath, JSON.stringify(group.colors || [], null, 2), 'utf8');
+  }
+  return true;
+});
+
+// We can remove delete-library since save-library handles sync, or keep it for individual deletes.
+ipcMain.handle('delete-library', (event, { groupName }) => {
+  const safeName = groupName.replace(/[<>:"/\\|?*]/g, '_');
+  const folderPath = path.join(LIB_ROOT, safeName);
+  if (fs.existsSync(folderPath)) {
+    fs.rmSync(folderPath, { recursive: true, force: true });
+    return true;
+  }
+  return false;
+});
+
 
 ipcMain.handle('get-machine-id', () => {
   return getMachineId();
@@ -78,6 +189,8 @@ ipcMain.handle('verify-license', (event, key) => {
 });
 
 app.whenReady().then(() => {
+  ensureLibFolders();
+
   if (loadAndVerify()) {
     createWindow();
   } else {
