@@ -1758,6 +1758,13 @@ function replacePxColor(old,nw,canvas){
   for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;if(Math.abs(d[i]-old[0])<=tol&&Math.abs(d[i+1]-old[1])<=tol&&Math.abs(d[i+2]-old[2])<=tol){d[i]=nw[0];d[i+1]=nw[1];d[i+2]=nw[2];}}
   ctx.putImageData(id,0,0);
 }
+function dedupPalette(pal){
+  const tol=6,seen=[];
+  return pal.filter(c=>{
+    const dup=seen.some(s=>Math.abs(s[0]-c[0])<=tol&&Math.abs(s[1]-c[1])<=tol&&Math.abs(s[2]-c[2])<=tol);
+    if(!dup)seen.push(c);return!dup;
+  });
+}
 function floodFill(px,py,fillRgb,canvas){
   canvas=canvas||CR;const ctx=canvas.getContext('2d'),id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data,w=canvas.width,h=canvas.height;
   const idx=(py*w+px)*4,tr=d[idx],tg=d[idx+1],tb=d[idx+2],[fr,fg,fb]=fillRgb;
@@ -2319,6 +2326,7 @@ function renderPalette(pal,pcts){
         pushUndo();
         replacePxColor(oldRgb,newRgb,CR);
         palette[targetIdx]=newRgb;
+        palette=dedupPalette(palette);
         const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
         const{sorted,pcts}=sortByCoverage(palette,imgData);
         palette=sorted;palOrig=palette.map(c=>[...c]);palPcts=pcts;
@@ -2339,6 +2347,7 @@ function renderPalette(pal,pcts){
       pushUndo();
       replacePxColor(c,newRgb,CR);
       palette[i]=newRgb;
+      palette=dedupPalette(palette);
       const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
       const{sorted,pcts}=sortByCoverage(palette,imgData);
       palette=sorted;palOrig=palette.map(cc=>[...cc]);palPcts=pcts;
@@ -2409,7 +2418,7 @@ $('ctx-lib').onclick=()=>{
     pushUndo();
     replacePxColor(oldRgb,newRgb,CR);
     palette[targetIdx]=newRgb;
-    // Recalculate coverage after replacement
+    palette=dedupPalette(palette);
     const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
     const{sorted,pcts}=sortByCoverage(palette,imgData);
     palette=sorted;palOrig=palette.map(c=>[...c]);palPcts=pcts;
@@ -3295,9 +3304,15 @@ function buildCmRows(){
       if(ab.classList.contains('done'))return;const newHex=ci.value,newRgb=hexToRgb(newHex);
       if(newHex.toLowerCase()===toHex(palette[palIdx]).toLowerCase())return;
       pushUndo();replacePxColor(palette[palIdx],newRgb);palette[palIdx]=newRgb;
+      const prevLen=palette.length;
+      palette=dedupPalette(palette);
+      const imgDataCm=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
+      const{sorted:cmS,pcts:cmP}=sortByCoverage(palette,imgDataCm);
+      palette=cmS;palOrig=palette.map(c=>[...c]);palPcts=cmP;
       sw.style.background=newHex;bf.style.background=newHex;
       ab.textContent='✓ Done';ab.classList.add('done');row.classList.add('replaced');
       renderPalette(palette,palPcts);rCount++;$('cm-fnote').textContent=rCount+' replaced';
+      if(palette.length<prevLen)buildCmRows();
     };
     ab.onclick=doApply;lb.onclick=()=>{lcFillMode=false;lcCallback=h=>{ci.value=h;};openLcModal();};
     rep.appendChild(ci);rep.appendChild(lb);rep.appendChild(ab);
