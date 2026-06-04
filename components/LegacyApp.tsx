@@ -214,13 +214,18 @@ export default function LegacyApp() {
         <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="t"  type="number" value="0" min="0" max="99"/></div>
         <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="tr" type="number" value="0" min="0" max="99"/></div>
         <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="l"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><div class="ol-dir-center">▣</div></div>
+        <div class="ol-dir-cell"><input class="ol-dir-center-inp" type="number" value="0" min="0" max="99" title="Set all directions"/></div>
         <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="r"  type="number" value="0" min="0" max="99"/></div>
         <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="bl" type="number" value="0" min="0" max="99"/></div>
         <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="b"  type="number" value="0" min="0" max="99"/></div>
         <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="br" type="number" value="0" min="0" max="99"/></div>
       </div>
       <div id="outline-status"></div>
+      <div class="ol-prop-row" style="margin-top:6px;border-top:1px solid #e0e0e0;padding-top:6px;">
+        <span class="ol-prop-lbl">Fill</span>
+        <label class="ol-radio"><input type="checkbox" id="ol-fill-on"/> Enable</label>
+        <div class="tool-active-sw" id="ol-fill-sw" title="Click to pick fill color from library" style="cursor:pointer;margin-left:6px;width:20px;height:20px;flex-shrink:0;"></div>
+      </div>
     </div>
   </div>
 </div>

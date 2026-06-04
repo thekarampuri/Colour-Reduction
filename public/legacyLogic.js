@@ -1191,9 +1191,32 @@ function doFillAt(e,hexColor){
   if(fillMode==='single')floodFill(pos.x,pos.y,fillRgb,CR);
   else replacePxColor([px[0],px[1],px[2]],fillRgb,CR);
   if(hlColors.length)renderHL();
+  updatePaletteAfterFill();
 }
 function doFill(e){
   doFillAt(e,activeToolColor);
+}
+function updatePaletteAfterFill(){
+  if(!palette.length)return;
+  const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
+  const presentColors=extractAllUnique(imgData.data);
+  const tol=6;
+  // Keep palette entries that still appear in the image
+  let newPal=palette.filter(pc=>
+    presentColors.some(ic=>
+      Math.abs(ic[0]-pc[0])<=tol&&Math.abs(ic[1]-pc[1])<=tol&&Math.abs(ic[2]-pc[2])<=tol
+    )
+  );
+  // Add any new colors in the image not yet in the palette
+  presentColors.forEach(ic=>{
+    if(!newPal.some(pc=>
+      Math.abs(ic[0]-pc[0])<=tol&&Math.abs(ic[1]-pc[1])<=tol&&Math.abs(ic[2]-pc[2])<=tol
+    ))newPal.push(ic);
+  });
+  if(!newPal.length)return;
+  const{sorted,pcts}=sortByCoverage(newPal,imgData);
+  palette=sorted;palOrig=palette.map(c=>[...c]);palPcts=pcts;
+  renderPalette(palette,palPcts);
 }
 
 /*━━ UNIVERSAL PAN — right-click hold+drag OR middle-click from any tool ━━*/
@@ -1353,6 +1376,7 @@ function buildOffsets(dirKey,px){
 // Click canvas → pick source color → apply outline
 /*━━ OUTLINE COLOR GROUP ━━*/
 let olColorGroup=[]; // array of {hex, rgb, clicks:[{x,y,mask}]} — one entry per unique color
+let olFillColor='#ffffff'; // fill color for outline tool fill option
 
 function olGroupKey(rgb){return(rgb[0]<<16)|(rgb[1]<<8)|rgb[2];}
 
@@ -1501,6 +1525,21 @@ function applyOutlineGroup(srcRgbs, connectedMask=null, skipPush=false){
 
   const out=new Uint8ClampedArray(d);
   let count=0;
+
+  // Apply fill to source pixels first (before outline so outline draws on top)
+  const fillOn=$('ol-fill-on')&&$('ol-fill-on').checked;
+  if(fillOn){
+    const fillRgb=hexToRgb(olFillColor);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      if(connectedMask&&!connectedMask[y*w+x])continue;
+      if(matchesSrc(x,y)){
+        const p=(y*w+x)*4;
+        out[p]=fillRgb[0];out[p+1]=fillRgb[1];out[p+2]=fillRgb[2];out[p+3]=255;
+      }
+    }
+  }
+
+  // Draw outline on top of fill
   for(let i=0;i<marked.length;i++){
     if(!marked[i])continue;count++;
     const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;
@@ -1680,6 +1719,31 @@ $('cm-reset').onclick=()=>{
 };
 $('cm-close').onclick=closeColorMap;
 $('cm-ov').onclick=e=>{if(e.target===$('cm-ov'))closeColorMap();};
+
+// Forward wheel zoom from Color Map window to canvas (so scrolling over the CM still zooms the image)
+$('cm-win').addEventListener('wheel',e=>{
+  if(!imgInfo)return;
+  if(e.target.closest('#cm-list'))return; // let the color list scroll normally
+  e.preventDefault();
+  const oldZ=zoomRef.v;
+  const newZ=e.deltaY<0?(ZSTEPS.find(s=>s>oldZ)||12):([...ZSTEPS].reverse().find(s=>s<oldZ)||0.1);
+  if(newZ===oldZ)return;
+  const r=VP.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  const cx=VP.scrollLeft+mx,cy=VP.scrollTop+my,sc=newZ/oldZ;
+  setZoom(newZ);requestAnimationFrame(()=>{VP.scrollLeft=cx*sc-mx;VP.scrollTop=cy*sc-my;});
+},{passive:false});
+
+// Forward canvas tool interactions (fill/paint/outline) from Color Map window to canvas
+$('cm-win').addEventListener('mousedown',e=>{
+  if(!imgInfo||!activeTool||activeTool==='pan'||curTab!=='reduced')return;
+  if(e.target.closest('button,input,select,a,.cm-sw,.cmr,#cm-hdr,#cm-resize'))return;
+  e.preventDefault();e.stopPropagation();
+  if(activeTool==='paint'){
+    VP.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true,clientX:e.clientX,clientY:e.clientY,button:0}));
+  }else{
+    VP.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:e.clientX,clientY:e.clientY}));
+  }
+},false);
 
 /*━━ UNIFIED LIBRARY WINDOW ━━*/
 let libCurrentMode='manage'; // 'manage' | 'pick'
@@ -2355,12 +2419,23 @@ $('btn-redo').onclick=doRedo;
 document.addEventListener('click',e=>{
   if(e.target&&e.target.id==='ol-group-apply')olApplyGroupOutline();
   if(e.target&&e.target.id==='ol-group-clear')olClearGroup();
+  if(e.target&&e.target.id==='ol-fill-sw'){
+    openLibWindow('pick',false,h=>{
+      olFillColor=h;
+      const sw=$('ol-fill-sw');if(sw)sw.style.background=h;
+    });
+  }
+});
+// Sync all 8 direction inputs when center input changes
+document.addEventListener('input',e=>{
+  if(!e.target.classList.contains('ol-dir-center-inp'))return;
+  document.querySelectorAll('.ol-dir-inp[data-dir]').forEach(inp=>inp.value=e.target.value);
 });
 // Render strip whenever outline tool panel opens
 const _origOpenToolPopup=openToolPopup;
 openToolPopup=function(name){
   _origOpenToolPopup(name);
-  if(name==='outline')setTimeout(()=>olRenderStrip(),0);
+  if(name==='outline')setTimeout(()=>{olRenderStrip();const sw=$('ol-fill-sw');if(sw)sw.style.background=olFillColor;},0);
 };
 ['tile','fill','paint','outline'].forEach(t=>$('ttab-'+t).onclick=()=>setActiveTool(t));
 $('btn-pan').onclick=()=>{if(imgInfo)setActiveTool(activeTool==='pan'?null:'pan');};
