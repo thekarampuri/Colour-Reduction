@@ -4,19 +4,14 @@ const fs = require('fs');
 const { getMachineId, verifyLicense, saveLicense, loadAndVerify } = require('./license.js');
 
 function getLibRoot() {
-  return path.join(app.getPath('userData'), 'Libraries');
+  const drive = process.env.SystemDrive || 'C:';
+  return path.join(drive, '\\', 'Color Reduction', 'Libraries');
 }
 
 function ensureLibFolders() {
   const libRoot = getLibRoot();
   if (!fs.existsSync(libRoot)) {
     fs.mkdirSync(libRoot, { recursive: true });
-  }
-
-  // Create a default library group folder
-  const defaultLib = path.join(libRoot, 'Default Library');
-  if (!fs.existsSync(defaultLib)) {
-    fs.mkdirSync(defaultLib, { recursive: true });
   }
 }
 
