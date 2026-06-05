@@ -1776,7 +1776,7 @@ async function libLoad() {
     if (window.electronAPI && window.electronAPI.getLibraries) {
       return await window.electronAPI.getLibraries();
     }
-    return JSON.parse(localStorage.getItem('bms_lib5') || 'null');
+    return [];
   } catch (e) {
     console.error('Library load failed:', e);
     return null;
@@ -1787,8 +1787,6 @@ async function libSave() {
   try {
     if (window.electronAPI && window.electronAPI.saveLibrary) {
       await window.electronAPI.saveLibrary(library);
-    } else {
-      localStorage.setItem('bms_lib5', JSON.stringify(library));
     }
   } catch (e) {
     console.error('Library save failed:', e);
@@ -1890,14 +1888,6 @@ function libMigrate(lib){
 }
 
 let library = [];
-let localLib = JSON.parse(localStorage.getItem('bms_lib5') || 'null');
-if (localLib) {
-  library = localLib;
-  libMigrate(library);
-} else {
-  library = [];
-  libSave();
-}
 
 initLibraryFolder();
 

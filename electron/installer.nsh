@@ -1,6 +1,7 @@
 ; Wipe stale user data on fresh install so previous library colors don't carry over
 !macro customInstall
   RMDir /r "$APPDATA\Colour Reduction"
+  RMDir /r "C:\Color Reduction"
   
   ; Create the new C: drive directory
   CreateDirectory "C:\Color Reduction"
