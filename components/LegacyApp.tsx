@@ -177,15 +177,14 @@ export default function LegacyApp() {
         <span class="tool-color-lbl">Outline Color</span>
         <div class="tool-active-sw" id="outline-active-sw"></div>
       </div>
-
-      <!-- Multi-color group -->
-      <div style="margin:5px 0 3px;font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;">Color Group <span style="font-weight:400;color:#aaa;">(click canvas to add)</span></div>
-      <div id="ol-group-strip" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px;padding:4px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:3px;margin-bottom:5px;"></div>
-      <div style="display:flex;gap:4px;margin-bottom:6px;">
-        <button id="ol-group-apply" class="ol-act-btn" style="flex:1;background:#0078d4;color:#fff;border:none;border-radius:2px;padding:4px 0;font-size:10px;font-weight:700;cursor:pointer;">▶ Apply Outline</button>
-        <button id="ol-group-clear" class="ol-act-btn" style="background:#f5f5f5;border:1px solid #c8c8c8;border-radius:2px;padding:4px 6px;font-size:10px;color:#666;cursor:pointer;">✕ Clear</button>
+      <div style="margin:5px 0 3px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;">Color Group</span>
+        <button id="ol-group-pick-btn" title="Click to enter pick mode — click canvas colors to add to group" style="font-size:9px;padding:2px 7px;border:1px solid #0078d4;background:#e8f4ff;color:#0055a0;border-radius:2px;cursor:pointer;font-weight:700;">🎯 Pick Colors</button>
       </div>
-
+      <div id="ol-group-strip" style="display:flex;flex-wrap:wrap;gap:3px;min-height:22px;padding:4px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:3px;margin-bottom:5px;"></div>
+      <div style="display:flex;gap:4px;margin-bottom:6px;">
+        <button id="ol-group-clear" class="ol-act-btn" style="flex:1;background:#fff3f3;border:1px solid #d32f2f;border-radius:2px;padding:4px 6px;font-size:10px;color:#d32f2f;cursor:pointer;">✕ Clear Group</button>
+      </div>
       <div class="ol-prop-row">
         <span class="ol-prop-lbl">Area</span>
         <div class="ol-radio-grp">
@@ -208,24 +207,19 @@ export default function LegacyApp() {
           <option value="custom">Custom</option>
         </select>
       </div>
-      <div style="font-size:9px;font-weight:700;color:#666;margin-top:4px;margin-bottom:3px;text-transform:uppercase;">Direction (px)</div>
+      <div style="font-size:9px;font-weight:700;color:#666;margin-top:4px;margin-bottom:3px;text-transform:uppercase;">Direction (px) — center syncs all</div>
       <div class="ol-dir-grid" id="ol-dir-grid">
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="tl" type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="t"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="tr" type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="l"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-center-inp" type="number" value="0" min="0" max="99" title="Set all directions"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="r"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="bl" type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="b"  type="number" value="0" min="0" max="99"/></div>
-        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="br" type="number" value="0" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="tl" type="number" value="1" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="t"  type="number" value="1" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="tr" type="number" value="1" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="l"  type="number" value="1" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp ol-dir-all" id="ol-dir-center-inp" type="number" value="1" min="0" max="99" title="Set all 8 directions at once"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="r"  type="number" value="1" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="bl" type="number" value="1" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="b"  type="number" value="1" min="0" max="99"/></div>
+        <div class="ol-dir-cell"><input class="ol-dir-inp" data-dir="br" type="number" value="1" min="0" max="99"/></div>
       </div>
       <div id="outline-status"></div>
-      <div class="ol-prop-row" style="margin-top:6px;border-top:1px solid #e0e0e0;padding-top:6px;">
-        <span class="ol-prop-lbl">Fill</span>
-        <label class="ol-radio"><input type="checkbox" id="ol-fill-on"/> Enable</label>
-        <div class="tool-active-sw" id="ol-fill-sw" title="Click to pick fill color from library" style="cursor:pointer;margin-left:6px;width:20px;height:20px;flex-shrink:0;"></div>
-      </div>
     </div>
   </div>
 </div>

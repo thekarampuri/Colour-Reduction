@@ -1088,6 +1088,7 @@ function setActiveTool(name){
     const el=$('ttab-'+t);if(el)el.classList.toggle('on',activeTool===t);
   });
   $('btn-pan').classList.toggle('on',activeTool==='pan');
+  if(prev==='outline'&&activeTool!=='outline')_exitOlPickMode();
   // Return previous tool's .tp node to its popup before switching
   if(prev&&prev!=='pan')_returnTpToPopup(prev);
   // Open sidebar panel for new tool, close if deactivated
@@ -1382,10 +1383,9 @@ function buildOffsets(dirKey,px){
   return offsets;
 }
 
-// Click canvas → pick source color → apply outline
 /*━━ OUTLINE COLOR GROUP ━━*/
-let olColorGroup=[]; // array of {hex, rgb, clicks:[{x,y,mask}]} — one entry per unique color
-let olFillColor='#ffffff'; // fill color for outline tool fill option
+let olColorGroup=[];
+let _olPickMode=false;
 
 function olGroupKey(rgb){return(rgb[0]<<16)|(rgb[1]<<8)|rgb[2];}
 
@@ -1393,11 +1393,7 @@ function olAddToGroup(pos, rgb, mask){
   const key=olGroupKey(rgb);
   const hex=toHex(rgb);
   let entry=olColorGroup.find(e=>e.key===key);
-  if(!entry){
-    entry={key,hex,rgb,clicks:[]};
-    olColorGroup.push(entry);
-  }
-  // In Single mode: store each click's mask separately; Similar mode: no mask needed
+  if(!entry){entry={key,hex,rgb,clicks:[]};olColorGroup.push(entry);}
   entry.clicks.push({x:pos.x,y:pos.y,mask});
   olRenderStrip();
 }
@@ -1421,27 +1417,101 @@ function olRenderStrip(){
   });
 }
 
-function olClearGroup(){olColorGroup=[];olRenderStrip();}
+function olClearGroup(){_exitOlPickMode();olColorGroup=[];olRenderStrip();COUT.style.display='none';}
+
+function _enterOlPickMode(){
+  _olPickMode=true;
+  const btn=$('ol-group-pick-btn');
+  if(btn){btn.classList.add('picking');btn.textContent='🎯 Picking… (Esc to stop)';}
+  VP.style.cursor='crosshair';
+  showOlStatus('Click canvas colors to add to group','#0078d4');
+}
+
+function _exitOlPickMode(){
+  if(!_olPickMode)return;
+  _olPickMode=false;
+  const btn=$('ol-group-pick-btn');
+  if(btn){btn.classList.remove('picking');btn.textContent='🎯 Pick Colors';}
+  VP.style.cursor='';
+  updateVpCursor();
+}
 
 function olApplyGroupOutline(){
   if(!olColorGroup.length){showOlStatus('Add colors first — click canvas','#d32f2f');return;}
   if(!imgInfo||curTab!=='reduced'){showOlStatus('Switch to Reduced tab first','#d32f2f');return;}
   const isSimilar=document.getElementById('ol-area-all').checked;
-  pushUndo();
-  let totalPx=0;
-  for(const entry of olColorGroup){
-    if(isSimilar){
-      // Similar: outline all pixels of this color everywhere, no mask
-      totalPx+=applyOutlineGroup([entry.rgb],null,true);
-    } else {
-      // Single: outline each connected click region separately
-      for(const click of entry.clicks){
-        totalPx+=applyOutlineGroup([entry.rgb],click.mask,true);
+  const typeInside=document.getElementById('ol-type-inside').checked;
+  const dirPx=getOutlineDirPx();
+  const hasAny=Object.values(dirPx).some(v=>v>0);
+  if(!hasAny){showOlStatus('Set at least one direction > 0','#d32f2f');return;}
+  const ctx=CR.getContext('2d');
+  const idata=ctx.getImageData(0,0,CR.width,CR.height);
+  const d=idata.data,w=CR.width,h=CR.height;
+  const outlineRgb=hexToRgb(activeToolColor);
+  const tol=16,G=olColorGroup.length;
+  const dirs8=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+  const getGroupIdx=(x,y)=>{
+    const wx=((x%w)+w)%w,wy=((y%h)+h)%h,i=(wy*w+wx)*4;
+    if(d[i+3]<10)return -1;
+    for(let g=0;g<G;g++){const rgb=olColorGroup[g].rgb;if(Math.abs(d[i]-rgb[0])<=tol&&Math.abs(d[i+1]-rgb[1])<=tol&&Math.abs(d[i+2]-rgb[2])<=tol)return g;}
+    return -1;
+  };
+  let validMask;
+  if(!isSimilar){
+    validMask=new Uint8Array(w*h);
+    const origins=olColorGroup.map(e=>e.clicks.length?e.clicks[e.clicks.length-1]:null).filter(Boolean);
+    const globalVisited=new Uint8Array(w*h);
+    for(const origin of origins){
+      const ox=((origin.x%w)+w)%w,oy=((origin.y%h)+h)%h,oi=oy*w+ox;
+      if(globalVisited[oi]||getGroupIdx(ox,oy)<0)continue;
+      const queue=[[ox,oy]],compPixels=[],colorsInComp=new Set(),visited=new Uint8Array(w*h);
+      visited[oi]=1;globalVisited[oi]=1;
+      for(let qi=0;qi<queue.length;qi++){
+        const[x,y]=queue[qi];compPixels.push(y*w+x);const gi=getGroupIdx(x,y);if(gi>=0)colorsInComp.add(gi);
+        for(const[dx,dy]of dirs8){const nx=((x+dx)%w+w)%w,ny=((y+dy)%h+h)%h,ni=ny*w+nx;if(visited[ni]||getGroupIdx(nx,ny)<0)continue;visited[ni]=1;globalVisited[ni]=1;queue.push([nx,ny]);}
+      }
+      if(colorsInComp.size===G){for(const pi of compPixels)validMask[pi]=1;}
+    }
+  } else {
+    const componentId=new Int32Array(w*h).fill(-1);let compCount=0;const compColors=[];
+    for(let sy=0;sy<h;sy++)for(let sx=0;sx<w;sx++){
+      if(componentId[sy*w+sx]>=0||getGroupIdx(sx,sy)<0)continue;
+      const cid=compCount++,colorsInComp=new Set(),queue=[[sx,sy]];componentId[sy*w+sx]=cid;
+      for(let qi=0;qi<queue.length;qi++){
+        const[x,y]=queue[qi];const gi=getGroupIdx(x,y);if(gi>=0)colorsInComp.add(gi);
+        for(const[dx,dy]of dirs8){const nx=((x+dx)%w+w)%w,ny=((y+dy)%h+h)%h,ni=ny*w+nx;if(componentId[ni]>=0||getGroupIdx(nx,ny)<0)continue;componentId[ni]=cid;queue.push([nx,ny]);}
+      }
+      compColors.push(colorsInComp);
+    }
+    const validComp=compColors.map(s=>s.size===G);
+    validMask=new Uint8Array(w*h);
+    for(let i=0;i<w*h;i++){const cid=componentId[i];if(cid>=0&&validComp[cid])validMask[i]=1;}
+  }
+  const marked=new Uint8Array(w*h);
+  for(let g=0;g<G;g++){
+    const matchesSrc=(x,y)=>{const wx=((x%w)+w)%w,wy=((y%h)+h)%h;return validMask[wy*w+wx]&&getGroupIdx(wx,wy)===g;};
+    const isOtherGroup=(x,y)=>{const wx=((x%w)+w)%w,wy=((y%h)+h)%h;const gi=getGroupIdx(wx,wy);return gi>=0&&gi!==g;};
+    for(const[dirKey,px]of Object.entries(dirPx)){
+      if(px<=0)continue;const offsets=buildOffsets(dirKey,px);
+      if(typeInside){
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+          if(!matchesSrc(x,y))continue;
+          for(const[ox,oy]of offsets){const nx=((x+ox)%w+w)%w,ny=((y+oy)%h+h)%h;if(!matchesSrc(nx,ny)){if(isOtherGroup(nx,ny))break;marked[y*w+x]=1;break;}}
+        }
+      } else {
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+          const i=(y*w+x)*4;if(d[i+3]>10&&matchesSrc(x,y))continue;if(isOtherGroup(x,y))continue;
+          for(const[ox,oy]of offsets){const nx=((x-ox)%w+w)%w,ny=((y-oy)%h+h)%h;if(matchesSrc(nx,ny)){marked[y*w+x]=1;break;}}
+        }
       }
     }
   }
+  const out=new Uint8ClampedArray(d);let count=0;
+  for(let i=0;i<marked.length;i++){if(!marked[i])continue;count++;const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;}
+  ctx.putImageData(new ImageData(out,w,h),0,0);
+  COUT.style.display='none';
   if(hlColors.length)renderHL();
-  showOlStatus('✓ '+totalPx.toLocaleString()+' px outlined ('+olColorGroup.length+' color'+(olColorGroup.length>1?'s':'')+')', '#388e3c');
+  showOlStatus('✓ '+count.toLocaleString()+' px outlined ('+G+' color'+(G>1?'s':'')+')', '#388e3c');
 }
 
 function doOutlineAt(e){
@@ -1450,130 +1520,40 @@ function doOutlineAt(e){
   const px=CR.getContext('2d').getImageData(pos.x,pos.y,1,1).data;
   if(px[3]<10)return;
   const srcRgb=[px[0],px[1],px[2]];
-  const isSimilar=document.getElementById('ol-area-all').checked;
-  const mask=isSimilar?null:buildConnectedMask(pos.x,pos.y,srcRgb);
-  olAddToGroup(pos,srcRgb,mask);
-  // Visual feedback: flash the canvas pixel area
-  showOlStatus('+ Color added to group ('+olColorGroup.length+' total)','#0078d4');
+  if(_olPickMode){
+    olAddToGroup(pos,srcRgb,null);
+    showOlStatus('+ Added to group ('+olColorGroup.length+' color'+(olColorGroup.length>1?'s':'')+')', '#0078d4');
+    return;
+  }
+  const isSimilar=document.getElementById('ol-area-all')?.checked;
+  if(!olColorGroup.length){pushUndo();const mask=isSimilar?null:buildConnectedMask(pos.x,pos.y,srcRgb);applyOutline(srcRgb,mask);return;}
+  const tol=16;
+  const entry=olColorGroup.find(g=>Math.abs(srcRgb[0]-g.rgb[0])<=tol&&Math.abs(srcRgb[1]-g.rgb[1])<=tol&&Math.abs(srcRgb[2]-g.rgb[2])<=tol);
+  if(!entry){showOlStatus('Color not in group — use 🎯 Pick Colors to add','#999');return;}
+  if(!isSimilar){olColorGroup.forEach(e=>{e.clicks=[];});entry.clicks=[{x:pos.x,y:pos.y,mask:null}];}
+  pushUndo();olApplyGroupOutline();
 }
 
-// Returns pixel count painted — works on current CR ImageData in-place
-function applyOutlineGroup(srcRgbs, connectedMask=null, skipPush=false){
-  if(!imgInfo||curTab!=='reduced')return 0;
-  const typeInside=document.getElementById('ol-type-inside').checked;
-  const dirPx=getOutlineDirPx();
-  const hasAny=Object.values(dirPx).some(v=>v>0);
-  if(!hasAny){showOlStatus('Set at least one direction > 0','#d32f2f');return 0;}
-
-  const ctx=CR.getContext('2d');
-  const idata=ctx.getImageData(0,0,CR.width,CR.height);
-  const d=idata.data,w=CR.width,h=CR.height;
-  const outlineRgb=hexToRgb(activeToolColor);
-  const tol=12;
-
-  // All grouped RGBs (every color in the group, not just current srcRgbs)
-  const allGroupRgbs=olColorGroup.map(e=>e.rgb);
-
-  function matchesRgbList(x,y,rgbList){
-    const i=(y*w+x)*4;
-    if(d[i+3]<10)return false;
-    for(const rgb of rgbList){
-      if(Math.abs(d[i]-rgb[0])<=tol&&Math.abs(d[i+1]-rgb[1])<=tol&&Math.abs(d[i+2]-rgb[2])<=tol)return true;
-    }
-    return false;
-  }
-
-  function matchesSrc(x,y){
-    const i=(y*w+x)*4;
-    if(d[i+3]<10)return false;
-    for(const srcRgb of srcRgbs){
-      if(Math.abs(d[i]-srcRgb[0])<=tol&&Math.abs(d[i+1]-srcRgb[1])<=tol&&Math.abs(d[i+2]-srcRgb[2])<=tol){
-        if(connectedMask&&!connectedMask[y*w+x])continue;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // Returns true if pixel (x,y) is a different grouped color (not srcRgbs)
-  function isOtherGroupColor(x,y){
-    if(x<0||x>=w||y<0||y>=h)return false;
-    if(matchesSrc(x,y))return false; // same src color — not "other"
-    return matchesRgbList(x,y,allGroupRgbs);
-  }
-
-  const marked=new Uint8Array(w*h);
-  for(const[dirKey,px] of Object.entries(dirPx)){
-    if(px<=0)continue;
-    const offsets=buildOffsets(dirKey,px);
-    if(typeInside){
-      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-        if(!matchesSrc(x,y))continue;
-        for(const[ox,oy]of offsets){
-          // Wrap coords — image repeats like tiles so edges connect to opposite side
-          const nx=((x+ox)%w+w)%w, ny=((y+oy)%h+h)%h;
-          if(!matchesSrc(nx,ny)){
-            if(isOtherGroupColor(nx,ny))break;
-            marked[y*w+x]=1;break;
-          }
-        }
-      }
-    } else {
-      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-        const i=(y*w+x)*4;
-        if(d[i+3]>10&&matchesSrc(x,y))continue;
-        if(isOtherGroupColor(x,y))continue;
-        for(const[ox,oy]of offsets){
-          // Outside: negate offset — look back toward src from outward direction
-          const nx=((x-ox)%w+w)%w, ny=((y-oy)%h+h)%h;
-          if(matchesSrc(nx,ny)){marked[y*w+x]=1;break;}
-        }
-      }
-    }
-  }
-
-  const out=new Uint8ClampedArray(d);
-  let count=0;
-
-  // Apply fill to source pixels first (before outline so outline draws on top)
-  const fillOn=$('ol-fill-on')&&$('ol-fill-on').checked;
-  if(fillOn){
-    const fillRgb=hexToRgb(olFillColor);
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-      if(connectedMask&&!connectedMask[y*w+x])continue;
-      if(matchesSrc(x,y)){
-        const p=(y*w+x)*4;
-        out[p]=fillRgb[0];out[p+1]=fillRgb[1];out[p+2]=fillRgb[2];out[p+3]=255;
-      }
-    }
-  }
-
-  // Draw outline on top of fill
-  for(let i=0;i<marked.length;i++){
-    if(!marked[i])continue;count++;
-    const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;
-  }
-  ctx.putImageData(new ImageData(out,w,h),0,0);
-  return count;
-}
-
-// BFS connected region mask — same as flood fill boundary detection
+// 8-directional BFS with wrap coords and tol=16
 function buildConnectedMask(sx,sy,srcRgb){
   const ctx=CR.getContext('2d');
   const d=ctx.getImageData(0,0,CR.width,CR.height).data;
-  const w=CR.width,h=CR.height,tol=12;
-  function matches(i){return d[i+3]>10&&Math.abs(d[i]-srcRgb[0])<=tol&&Math.abs(d[i+1]-srcRgb[1])<=tol&&Math.abs(d[i+2]-srcRgb[2])<=tol;}
+  const w=CR.width,h=CR.height,tol=16;
+  const matches=(x,y)=>{
+    const wx=((x%w)+w)%w,wy=((y%h)+h)%h,i=(wy*w+wx)*4;
+    return d[i+3]>10&&Math.abs(d[i]-srcRgb[0])<=tol&&Math.abs(d[i+1]-srcRgb[1])<=tol&&Math.abs(d[i+2]-srcRgb[2])<=tol;
+  };
   const mask=new Uint8Array(w*h),visited=new Uint8Array(w*h);
-  const stack=[sy*w+sx];visited[sy*w+sx]=1;
+  if(!matches(sx,sy))return mask;
+  const stack=[[sx,sy]];visited[sy*w+sx]=1;
+  const dirs8=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
   while(stack.length){
-    const pos=stack.pop();
-    if(!matches(pos*4))continue;
-    mask[pos]=1;
-    const x=pos%w,y=Math.floor(pos/w);
-    if(x>0&&!visited[pos-1]){visited[pos-1]=1;stack.push(pos-1);}
-    if(x<w-1&&!visited[pos+1]){visited[pos+1]=1;stack.push(pos+1);}
-    if(y>0&&!visited[pos-w]){visited[pos-w]=1;stack.push(pos-w);}
-    if(y<h-1&&!visited[pos+w]){visited[pos+w]=1;stack.push(pos+w);}
+    const[x,y]=stack.pop();mask[((y%h+h)%h)*w+((x%w+w)%w)]=1;
+    for(const[dx,dy]of dirs8){
+      const nx=x+dx,ny=y+dy,nwx=((nx%w)+w)%w,nwy=((ny%h)+h)%h,ni=nwy*w+nwx;
+      if(visited[ni])continue;visited[ni]=1;
+      if(matches(nx,ny))stack.push([nx,ny]);
+    }
   }
   return mask;
 }
@@ -2432,25 +2412,26 @@ $('btn-undo').onclick=doUndo;
 $('btn-redo').onclick=doRedo;
 // Outline group buttons (event delegation — node moves to sidebar)
 document.addEventListener('click',e=>{
-  if(e.target&&e.target.id==='ol-group-apply')olApplyGroupOutline();
-  if(e.target&&e.target.id==='ol-group-clear')olClearGroup();
-  if(e.target&&e.target.id==='ol-fill-sw'){
-    openLibWindow('pick',false,h=>{
-      olFillColor=h;
-      const sw=$('ol-fill-sw');if(sw)sw.style.background=h;
-    });
+  if(e.target&&e.target.id==='ol-group-pick-btn'){
+    if(_olPickMode)_exitOlPickMode();else _enterOlPickMode();
   }
+  if(e.target&&e.target.id==='ol-group-clear'){_exitOlPickMode();olClearGroup();}
 });
-// Sync all 8 direction inputs when center input changes
+// Esc exits pick mode
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&_olPickMode){e.stopPropagation();_exitOlPickMode();}
+},{capture:true});
+// Center input syncs all 8 direction inputs
 document.addEventListener('input',e=>{
-  if(!e.target.classList.contains('ol-dir-center-inp'))return;
-  document.querySelectorAll('.ol-dir-inp[data-dir]').forEach(inp=>inp.value=e.target.value);
+  if(!e.target||e.target.id!=='ol-dir-center-inp')return;
+  const val=Math.max(0,Math.min(99,parseInt(e.target.value)||0));
+  document.querySelectorAll('.ol-dir-inp[data-dir]').forEach(inp=>{inp.value=val;});
 });
 // Render strip whenever outline tool panel opens
 const _origOpenToolPopup=openToolPopup;
 openToolPopup=function(name){
   _origOpenToolPopup(name);
-  if(name==='outline')setTimeout(()=>{olRenderStrip();const sw=$('ol-fill-sw');if(sw)sw.style.background=olFillColor;},0);
+  if(name==='outline')setTimeout(()=>olRenderStrip(),0);
 };
 ['tile','fill','paint','outline'].forEach(t=>$('ttab-'+t).onclick=()=>setActiveTool(t));
 $('btn-pan').onclick=()=>{if(imgInfo)setActiveTool(activeTool==='pan'?null:'pan');};

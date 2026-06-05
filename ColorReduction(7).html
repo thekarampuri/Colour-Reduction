@@ -31,9 +31,8 @@ canvas{display:block;image-rendering:pixelated;image-rendering:-moz-crisp-edges;
   padding:6px 10px 5px;
   background:#e8e8e8;
   border-bottom:1px solid #c8c8c8;
-  display:flex;align-items:center;gap:7px;
+  display:flex;align-items:baseline;gap:6px;
 }
-#logo-icon{width:18px;height:18px;object-fit:contain;flex-shrink:0;}
 #logo-title{font-size:13px;font-weight:700;color:#1a1a1a;letter-spacing:.2px;}
 #logo-sub{font-size:10px;color:#888;}
 #sb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;}
@@ -213,23 +212,6 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 #btn-cmap,#btn-lib{flex:1;padding:4px 6px;font-size:11px;display:none;}
 #btn-exp{padding:4px 6px;font-size:11px;display:none;}
 #status{font-size:11px;color:#0078d4;text-align:center;display:none;padding:2px 0;}
-/* Brand logo area at sidebar bottom */
-#sb-brand{
-  flex-shrink:0;
-  background:#e8e8e8;
-  border-top:1px solid #c8c8c8;
-  padding:6px 8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-#sb-brand img{
-  width:100%;
-  max-width:204px;
-  height:auto;
-  display:block;
-  object-fit:contain;
-}
 
 /*━━ RIGHT PANEL ━━*/
 #right{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
@@ -545,17 +527,16 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 }
 .ol-dir-inp:focus{border-color:#0078d4;background:#f0f8ff;}
 .ol-dir-inp.disabled{background:#f0f0f0;color:#bbb;border-color:#e0e0e0;}
-.ol-dir-center{
-  width:32px;height:22px;background:#e8e8e8;border:1px solid #ddd;
-  border-radius:2px;display:flex;align-items:center;justify-content:center;
-  font-size:9px;color:#999;
-}
 .ol-dir-all{
   background:#fff8e6;border-color:#f0a500;color:#7a4f00;font-weight:900;
   box-shadow:0 0 0 1px #f0a50044;
 }
 .ol-dir-all:focus{border-color:#e09000;background:#fff3cc;}
-#ol-group-pick-btn.picking{background:#fff3cd;border-color:#f0a500;color:#7a4f00;animation:sw-pulse .7s infinite alternate;}
+.ol-dir-center{
+  width:32px;height:22px;background:#e8e8e8;border:1px solid #ddd;
+  border-radius:2px;display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#999;
+}
 .ol-dir-lbl{font-size:7px;color:#aaa;text-align:center;}
 .ol-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
 .ol-lbl{font-size:11px;color:#555;min-width:42px;flex-shrink:0;}
@@ -588,6 +569,7 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 }
 #btn-outline-apply:hover{background:#106ebe;}
 #outline-status{font-size:10px;color:#388e3c;margin-top:4px;display:none;text-align:center;}
+#ol-group-pick-btn.picking{background:#fff3cd;border-color:#f0a500;color:#7a4f00;animation:sw-pulse .7s infinite alternate;}
 .ol-grp-sw{
   width:18px;height:18px;border-radius:2px;border:1.5px solid rgba(0,0,0,.25);
   cursor:pointer;position:relative;flex-shrink:0;
@@ -736,60 +718,47 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 .mfoot-note{flex:1;text-align:right;font-size:10px;color:#aaa;}
 
 /*━━ COLOR MAP ━━*/
-#cm-ov{background:transparent;pointer-events:none;}
-#cm-ov.open{pointer-events:none;}
-#cm-win{
-  width:430px;height:520px;
-  min-width:280px;min-height:180px;
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  pointer-events:all;user-select:none;
-  display:flex;flex-direction:column;overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.12);
-}
-#cm-win .mhdr{cursor:move;}
-#cm-steps{display:flex;align-items:center;padding:4px 10px;background:#fff;border-bottom:1px solid #e0e0e0;flex-shrink:0;gap:0;}
-.cstep{display:flex;align-items:center;gap:4px;font-size:9px;color:#888;letter-spacing:.6px;text-transform:uppercase;}
-.csn{width:13px;height:13px;border-radius:50%;background:#0078d4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;}
-.csa{color:#ccc;margin:0 5px;font-size:9px;}
-#cm-list{flex:1;overflow-y:auto;padding:6px 8px 4px;background:#fff;}
+#cm-win{width:660px;max-width:97vw;max-height:88vh;}
+#cm-steps{display:flex;align-items:center;padding:5px 12px;background:#fff;border-bottom:1px solid #e0e0e0;flex-shrink:0;gap:0;}
+.cstep{display:flex;align-items:center;gap:4px;font-size:10px;color:#888;letter-spacing:.8px;text-transform:uppercase;}
+.csn{width:14px;height:14px;border-radius:50%;background:#0078d4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+.csa{color:#ccc;margin:0 8px;font-size:10px;}
+#cm-list{flex:1;overflow-y:auto;padding:8px 10px 4px;background:#fff;}
 .cm-empty{text-align:center;padding:40px;font-size:12px;color:#aaa;letter-spacing:1px;}
 .cmr{
-  display:grid;grid-template-columns:36px 1fr auto;
-  align-items:center;gap:8px;padding:5px 7px;
-  margin-bottom:3px;background:#fff;
+  display:grid;grid-template-columns:44px 90px 1fr auto;
+  align-items:center;gap:10px;padding:7px 9px;
+  margin-bottom:4px;background:#fff;
   border:1px solid #e8e8e8;border-radius:1px;
   transition:border-color .1s;
 }
 .cmr:hover{border-color:#0078d4;}
 .cmr.replaced{border-color:#388e3c;background:#f8fff8;}
-.cmr.hl-on .cm-sw{border-color:#1a1a1a;box-shadow:0 0 0 1px #fff,0 0 0 3px #1a1a1a;}
-.cm-sw{width:36px;height:36px;border:1px solid rgba(0,0,0,.12);flex-shrink:0;cursor:pointer;transition:transform .1s;}
+.cm-sw{width:42px;height:42px;border:1px solid rgba(0,0,0,.12);flex-shrink:0;cursor:pointer;transition:transform .1s;}
 .cm-sw:hover{transform:scale(1.07);}
-.cm-bar-track{height:4px;background:#f0f0f0;border:1px solid #e0e0e0;overflow:hidden;margin-bottom:2px;}
+.cm-hex{font-size:11px;font-weight:600;color:#333;font-family:monospace;}
+.cm-rgb{font-size:10px;color:#999;margin-top:2px;font-family:monospace;}
+.cm-bar-track{height:5px;background:#f0f0f0;border:1px solid #e0e0e0;border-radius:0;overflow:hidden;margin-bottom:3px;}
 .cm-bar-fill{height:100%;width:0;transition:width .5s ease;}
-.cm-pct-line{display:flex;align-items:baseline;gap:3px;}
-.cm-pct-big{font-size:12px;font-weight:700;color:#333;}
-.cm-pct-sm{font-size:9px;color:#aaa;}
-.cm-px{font-size:9px;color:#bbb;}
-.cm-rep{display:flex;align-items:center;gap:4px;}
+.cm-pct-line{display:flex;align-items:baseline;gap:4px;}
+.cm-pct-big{font-size:14px;font-weight:700;color:#333;}
+.cm-pct-sm{font-size:10px;color:#aaa;}
+.cm-px{font-size:10px;color:#bbb;}
+.cm-rep{display:flex;align-items:center;gap:5px;}
+.cm-rep-lbl{font-size:10px;color:#999;white-space:nowrap;}
 .cm-lib-btn{
-  width:24px;height:24px;background:#e1e1e1;border:1px solid #adadad;
-  border-radius:1px;font-size:12px;display:flex;align-items:center;
+  width:26px;height:26px;background:#e1e1e1;border:1px solid #adadad;
+  border-radius:1px;font-size:13px;display:flex;align-items:center;
   justify-content:center;transition:all .1s;
 }
 .cm-lib-btn:hover{background:#e5f1fb;border-color:#0078d4;}
 .cm-apply-btn{
-  padding:2px 7px;font-size:10px;font-weight:600;
+  padding:3px 8px;font-size:10px;font-weight:600;
   background:#e1e1e1;border:1px solid #adadad;border-radius:1px;
   color:#444;transition:all .1s;white-space:nowrap;
 }
 .cm-apply-btn:hover{background:#e5f1fb;border-color:#0078d4;color:#0078d4;}
 .cm-apply-btn.done{background:#e8f5e9;border-color:#388e3c;color:#2e7d32;cursor:default;}
-#cm-resize{
-  position:absolute;bottom:0;right:0;width:14px;height:14px;cursor:se-resize;z-index:10;
-  background:linear-gradient(135deg,transparent 50%,#c0c0c0 50%,#a0a0a0 65%,transparent 65%),
-             linear-gradient(135deg,transparent 70%,#c0c0c0 70%,#a0a0a0 80%,transparent 80%);
-}
 
 /*━━ LIBRARY ━━*/
 .lib-body{display:flex;flex:1;overflow:hidden;}
@@ -1132,7 +1101,8 @@ input.ci::-webkit-color-swatch{border:none;border-radius:0;}
 body.activation-locked #app{pointer-events:none;filter:blur(1px);}
 </style>
 </head>
-<div id="activation-gate" class="hidden">
+<!-- <body class="activation-locked">
+<div id="activation-gate">
   <div id="activation-box">
     <div id="activation-title">License Required</div>
     <div id="activation-note">Share this Machine ID, then enter the license key generated for this machine.</div>
@@ -1149,14 +1119,14 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
       <div id="activation-error"></div>
     </div>
   </div>
-</div>
+</div> -->
 <div id="app">
 
 <!--━━ SIDEBAR ━━-->
 <div id="sidebar">
   <div id="logo">
-    <img id="logo-icon" src="assets/app-icon.png" alt="" />
     <div id="logo-title">Color Reduction</div>
+    <div id="logo-sub">Color Reduction</div>
   </div>
   <div id="sb-scroll">
 
@@ -1243,7 +1213,7 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
 
   <!-- Brand logo at bottom of sidebar -->
   <div id="sb-brand">
-    <img src="assets/logo-panel.png" alt="By Bhagya Lakshmi and Devi Priya" style="width:100%;max-width:200px;height:auto;display:block;">
+    <img src="logo/logo.PNG" alt="By Bhagya Lakshmi and Devi Priya" width="140">
   </div>
 
 
@@ -1316,6 +1286,8 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
         <span class="tool-color-lbl">Outline Color</span>
         <div class="tool-active-sw" id="outline-active-sw"></div>
       </div>
+
+      <!-- Multi-color group -->
       <div style="margin:5px 0 3px;display:flex;align-items:center;justify-content:space-between;">
         <span style="font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;">Color Group</span>
         <button id="ol-group-pick-btn" title="Click to enter pick mode — click canvas colors to add to group" style="font-size:9px;padding:2px 7px;border:1px solid #0078d4;background:#e8f4ff;color:#0055a0;border-radius:2px;cursor:pointer;font-weight:700;">🎯 Pick Colors</button>
@@ -1324,6 +1296,7 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
       <div style="display:flex;gap:4px;margin-bottom:6px;">
         <button id="ol-group-clear" class="ol-act-btn" style="flex:1;background:#fff3f3;border:1px solid #d32f2f;border-radius:2px;padding:4px 6px;font-size:10px;color:#d32f2f;cursor:pointer;">✕ Clear Group</button>
       </div>
+
       <div class="ol-prop-row">
         <span class="ol-prop-lbl">Area</span>
         <div class="ol-radio-grp">
@@ -1514,7 +1487,7 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
 <!--━━ COLOR MAP ━━-->
 <div class="ov" id="cm-ov">
   <div class="mwin" id="cm-win">
-    <div class="mhdr" id="cm-hdr">
+    <div class="mhdr">
       <div class="mtitle">Color Map <span id="cm-badge" style="font-size:10px;color:#888;font-weight:400;margin-left:6px"></span></div>
       <button class="mclose" id="cm-close">✕</button>
     </div>
@@ -1526,12 +1499,10 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
     </div>
     <div id="cm-list"><div class="cm-empty">Reduce an image first</div></div>
     <div class="mfoot">
-      <button id="cm-btn-hl-mode" style="padding:2px 7px;font-size:10px;background:#e1e1e1;border:1px solid #adadad;border-radius:2px;cursor:pointer;color:#555;transition:all .12s;white-space:nowrap;" title="Toggle Highlight Mode — then click a swatch to highlight it on canvas">🔦 Highlight</button>
-      <button class="win-btn" id="cm-reset">Reset</button>
       <button class="win-btn primary" id="cm-apply-all">Apply All</button>
+      <button class="win-btn" id="cm-reset">↺ Reset</button>
       <div class="mfoot-note" id="cm-fnote"></div>
     </div>
-    <div id="cm-resize"></div>
   </div>
 </div>
 
@@ -1647,8 +1618,7 @@ function uid(){return Math.random().toString(36).slice(2,9);}
 
 function unlockApp(){
   document.body.classList.remove('activation-locked');
-  const g=$('activation-gate');
-  if(g)g.classList.add('hidden');
+  $('activation-gate').classList.add('hidden');
 }
 async function initActivationGate(){
   const gate=$('activation-gate');
@@ -1661,49 +1631,46 @@ async function initActivationGate(){
   if(window.license){
     try{
       const info=await window.license.getInfo();
-      machineId=(info&&info.machineId)||machineId;
-      licensed=!!(info&&info.licensed);
+      machineId=info.machineId||machineId;
+      licensed=!!info.licensed;
     }catch(e){
       console.error('Machine ID generation failed:', e);
-      if(error)error.textContent='Unable to read Machine ID';
+      error.textContent='Unable to read Machine ID';
     }
   }
 
-  if(hwIdEl)hwIdEl.textContent=machineId;
+  hwIdEl.textContent=machineId;
   if(licensed){unlockApp();return;}
-  // Only show gate if not licensed
-  if(gate)gate.classList.remove('hidden');
-  if(input)setTimeout(()=>input.focus(),0);
-  const copyBtn=$('activation-copy');
-  if(copyBtn)copyBtn.onclick=async()=>{
+  gate.classList.remove('hidden');
+  setTimeout(()=>input.focus(),0);
+  $('activation-copy').onclick=async()=>{
     try{
       await navigator.clipboard.writeText(machineId);
-      if(error)error.textContent='Machine ID copied';
+      error.textContent='Machine ID copied';
     }catch(e){
-      if(error)error.textContent='Copy failed';
+      error.textContent='Copy failed';
     }
   };
   const tryActivate=async()=>{
     if(!window.license){
-      if(error)error.textContent='License check requires the desktop app';
+      error.textContent='License check requires the desktop app';
       return;
     }
     try{
-      const result=await window.license.validate(input?input.value:'');
-      if(result&&result.ok){
-        if(error)error.textContent='';
+      const result=await window.license.validate(input.value);
+      if(result.ok){
+        error.textContent='';
         unlockApp();
         return;
       }
     }catch(e){
       console.error('License validation failed:', e);
     }
-    if(error)error.textContent='Invalid license key';
-    if(input)input.select();
+    error.textContent='Invalid license key';
+    input.select();
   };
-  const activateBtn=$('activation-btn');
-  if(activateBtn)activateBtn.onclick=tryActivate;
-  if(input)input.onkeydown=e=>{if(e.key==='Enter')tryActivate();};
+  $('activation-btn').onclick=tryActivate;
+  input.onkeydown=e=>{if(e.key==='Enter')tryActivate();};
 }
 initActivationGate();
 
@@ -1752,13 +1719,6 @@ function replacePxColor(old,nw,canvas){
   for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;if(Math.abs(d[i]-old[0])<=tol&&Math.abs(d[i+1]-old[1])<=tol&&Math.abs(d[i+2]-old[2])<=tol){d[i]=nw[0];d[i+1]=nw[1];d[i+2]=nw[2];}}
   ctx.putImageData(id,0,0);
 }
-function dedupPalette(pal){
-  const tol=6,seen=[];
-  return pal.filter(c=>{
-    const dup=seen.some(s=>Math.abs(s[0]-c[0])<=tol&&Math.abs(s[1]-c[1])<=tol&&Math.abs(s[2]-c[2])<=tol);
-    if(!dup)seen.push(c);return!dup;
-  });
-}
 function floodFill(px,py,fillRgb,canvas){
   canvas=canvas||CR;const ctx=canvas.getContext('2d'),id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data,w=canvas.width,h=canvas.height;
   const idx=(py*w+px)*4,tr=d[idx],tg=d[idx+1],tb=d[idx+2],[fr,fg,fb]=fillRgb;
@@ -1769,12 +1729,15 @@ function floodFill(px,py,fillRgb,canvas){
 }
 
 /*━━ LIBRARY STATE ━━*/
-let libraryFolderPath = 'C:\\Color Reduction';
+let libraryFolderPath = '';
 
-async function libLoad() {
+function libLoad() {
   try {
-    if (window.electronAPI && window.electronAPI.getLibraries) {
-      return await window.electronAPI.getLibraries();
+    if (window.paletteLibrary) {
+      const result = window.paletteLibrary.load();
+      if (!result.ok) throw new Error(result.error || 'Unable to load palette library');
+      libraryFolderPath = result.folder || '';
+      return result.library;
     }
     return JSON.parse(localStorage.getItem('bms_lib5') || 'null');
   } catch (e) {
@@ -1785,8 +1748,9 @@ async function libLoad() {
 
 async function libSave() {
   try {
-    if (window.electronAPI && window.electronAPI.saveLibrary) {
-      await window.electronAPI.saveLibrary(library);
+    if (window.paletteLibrary) {
+      const result = await window.paletteLibrary.save(library);
+      libraryFolderPath = result.folder || libraryFolderPath;
     } else {
       localStorage.setItem('bms_lib5', JSON.stringify(library));
     }
@@ -1797,15 +1761,13 @@ async function libSave() {
 
 async function initLibraryFolder() {
   try {
-    const loaded = await libLoad();
-    if (loaded && loaded.length > 0) {
+    const loaded = libLoad();
+    if (loaded) {
       library = loaded;
       libMigrate(library);
       buildLibPanel_right();
-      libShowStatus('Folder connected ✓', 'ok');
-    } else {
-      libSave();
     }
+    libShowStatus('Folder connected ✓', 'ok');
   } catch (e) {
     console.error('Library folder load failed:', e);
     libShowStatus('Folder load failed', 'err');
@@ -1888,18 +1850,36 @@ function libMigrate(lib){
   lib.forEach(g=>{g.colors=g.colors.map(c=>typeof c==='string'?{hex:c,name:'',opacity:100}:Object.assign({opacity:100},c));});
   return lib;
 }
-
-let library = [];
-let localLib = JSON.parse(localStorage.getItem('bms_lib5') || 'null');
-if (localLib) {
-  library = localLib;
-  libMigrate(library);
-} else {
-  library = [];
-  libSave();
-}
-
-initLibraryFolder();
+let library=libLoad();
+if(library)libMigrate(library);
+if(!library){library=[
+  {id:uid(),name:'Warm',colors:[
+    {hex:'#ff6b35',name:'Flame',opacity:100},    {hex:'#e63946',name:'Crimson',opacity:100},
+    {hex:'#f4a261',name:'Sandy',opacity:100},    {hex:'#e76f51',name:'Coral',opacity:100},
+    {hex:'#ffb703',name:'Amber',opacity:100},    {hex:'#fb8500',name:'Tangerine',opacity:100}
+  ]},
+  {id:uid(),name:'Cool',colors:[
+    {hex:'#023e8a',name:'Navy',opacity:100},     {hex:'#0096c7',name:'Ocean',opacity:100},
+    {hex:'#48cae4',name:'Sky',opacity:100},      {hex:'#ade8f4',name:'Ice',opacity:100},
+    {hex:'#90e0ef',name:'Frost',opacity:100}
+  ]},
+  {id:uid(),name:'Earthy',colors:[
+    {hex:'#606c38',name:'Moss',opacity:100},     {hex:'#283618',name:'Forest',opacity:100},
+    {hex:'#dda15e',name:'Wheat',opacity:100},    {hex:'#bc6c25',name:'Bark',opacity:100},
+    {hex:'#a7c957',name:'Lime',opacity:100}
+  ]},
+  {id:uid(),name:'Skin',colors:[
+    {hex:'#ffe0bd',name:'Porcelain',opacity:100},{hex:'#ffcd94',name:'Peach',opacity:100},
+    {hex:'#e8ac69',name:'Tan',opacity:100},      {hex:'#d4845a',name:'Caramel',opacity:100},
+    {hex:'#c06a3c',name:'Bronze',opacity:100},   {hex:'#8d4a2d',name:'Mahogany',opacity:100}
+  ]},
+  {id:uid(),name:'Grey',colors:[
+    {hex:'#ffffff',name:'White',opacity:100},    {hex:'#d0d0d0',name:'Silver',opacity:100},
+    {hex:'#a0a0a0',name:'Grey',opacity:100},     {hex:'#707070',name:'Slate',opacity:100},
+    {hex:'#404040',name:'Graphite',opacity:100}, {hex:'#101010',name:'Charcoal',opacity:100}
+  ]},
+  {id:uid(),name:'Custom',colors:[]}
+];libSave();}
 
 /*━━ APP STATE ━━*/
 const CO=$('co'),CR=$('cr'),CH=$('ch');
@@ -2320,7 +2300,6 @@ function renderPalette(pal,pcts){
         pushUndo();
         replacePxColor(oldRgb,newRgb,CR);
         palette[targetIdx]=newRgb;
-        palette=dedupPalette(palette);
         const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
         const{sorted,pcts}=sortByCoverage(palette,imgData);
         palette=sorted;palOrig=palette.map(c=>[...c]);palPcts=pcts;
@@ -2341,7 +2320,6 @@ function renderPalette(pal,pcts){
       pushUndo();
       replacePxColor(c,newRgb,CR);
       palette[i]=newRgb;
-      palette=dedupPalette(palette);
       const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
       const{sorted,pcts}=sortByCoverage(palette,imgData);
       palette=sorted;palOrig=palette.map(cc=>[...cc]);palPcts=pcts;
@@ -2412,7 +2390,7 @@ $('ctx-lib').onclick=()=>{
     pushUndo();
     replacePxColor(oldRgb,newRgb,CR);
     palette[targetIdx]=newRgb;
-    palette=dedupPalette(palette);
+    // Recalculate coverage after replacement
     const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
     const{sorted,pcts}=sortByCoverage(palette,imgData);
     palette=sorted;palOrig=palette.map(c=>[...c]);palPcts=pcts;
@@ -2424,24 +2402,11 @@ $('ctx-lib').onclick=()=>{
 };
 
 /*━━ HIGHLIGHT OVERLAY — multi-selection ━━*/
-function updateCmHlState(){
-  if(!$('cm-ov').classList.contains('open'))return;
-  document.querySelectorAll('#cm-list .cmr').forEach(row=>{
-    row.style.cursor=hlMode?'pointer':'';
-    if(row._rgb){
-      if(isHlActive(row._rgb))row.classList.add('hl-on');
-      else row.classList.remove('hl-on');
-      const sw=row.querySelector('.cm-sw');
-      if(sw)sw.title=hlMode?'Highlight '+toHex(row._rgb):'Copy '+toHex(row._rgb);
-    }
-  });
-}
 function toggleHlColor(rgb){
   const idx=hlColors.findIndex(h=>colorsMatch(h,rgb));
   if(idx>=0)hlColors.splice(idx,1); else hlColors.push(rgb);
   updateSize();renderHL();
   renderPalette(palette,palPcts);
-  updateCmHlState();
   if(curTab==='reduced')CH.style.display=hlColors.length?'block':'none';
 }
 function clearHL(){
@@ -2449,24 +2414,10 @@ function clearHL(){
   CH.getContext('2d').clearRect(0,0,CH.width,CH.height);
   CH.style.display='none';
   renderPalette(palette,palPcts);
-  updateCmHlState();
-  toggleHighlightMode(false);
-}
-function toggleHighlightMode(forceState){
-  if(forceState===undefined&&!imgInfo)return;
-  if(forceState!==undefined)hlMode=forceState; else hlMode=!hlMode;
-  const applyStyle=btn=>{
-    if(!btn)return;
-    btn.style.background=hlMode?'#cce4f7':'#e1e1e1';
-    btn.style.borderColor=hlMode?'#0078d4':'#adadad';
-    btn.style.color=hlMode?'#005a9e':'#555';
-    btn.style.fontWeight=hlMode?'700':'400';
-    btn.title=hlMode?'Highlight Mode ON — click a swatch to highlight':'Toggle Highlight Mode — then click a swatch to highlight it on canvas';
-  };
-  applyStyle($('btn-hl-mode'));
-  applyStyle($('cm-btn-hl-mode'));
-  renderPalette(palette,palPcts);
-  updateCmHlState();
+  // Reset highlight mode button
+  hlMode=false;
+  const btn=$('btn-hl-mode');
+  if(btn){btn.style.background='#e1e1e1';btn.style.borderColor='#adadad';btn.style.color='#555';btn.style.fontWeight='400';}
 }
 function renderHL(){
   if(!hlColors.length||!imgInfo){CH.style.display='none';return;}
@@ -2507,20 +2458,20 @@ function applyCountUI(){
 }
 
 /*━━ FILE LOAD ━━*/
-function loadImageFromDataUrl(dataUrl, name, filePath){
-  const img=new Image();
-  img.onload=()=>{
+function loadFile(file){
+  if(!file)return;const reader=new FileReader();
+  reader.onload=ev=>{const img=new Image();img.onload=()=>{
     const w=img.naturalWidth,h=img.naturalHeight;
     CO.width=w;CO.height=h;const ctx=CO.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage(img,0,0,w,h);
     CR.width=w;CR.height=h;CR.getContext('2d').clearRect(0,0,w,h);
     CH.width=w;CH.height=h;
     const unique=countUnique(ctx.getImageData(0,0,w,h).data);
-    imgInfo={w,h,name,path:filePath,unique,originalUnique:unique,reducedUnique:null};
+    imgInfo={w,h,name:file.name,unique,originalUnique:unique,reducedUnique:null};
     palette=[];palOrig=[];reducedData=null;reducedW=0;reducedH=0;
     sampled=[];cntVal='';cntErr='';
     undoStack=[];redoStack=[];tileActive=false;activeTool=null;
     $('tile-x').value=1;$('tile-y').value=1;$('tile-info').textContent='';
-    $('drop').innerHTML='<div id="drop-icon" style="font-size:18px;opacity:.25;margin-bottom:2px">📄</div><div style="font-size:11px;color:#555">'+name+'</div>';
+    $('drop').innerHTML='<div id="drop-icon" style="font-size:18px;opacity:.25;margin-bottom:2px">📄</div><div style="font-size:11px;color:#555">'+file.name+'</div>';
     $('fstats').style.display='flex';$('ss').textContent=w+'×'+h;$('su').textContent=unique.toLocaleString();
     const inp=$('cnt-inp');inp.disabled=false;inp.value='';inp.max=256;inp.placeholder='2–'+Math.min(256,unique-1);inp.className='win-inp';
     if(unique>256){
@@ -2539,16 +2490,8 @@ function loadImageFromDataUrl(dataUrl, name, filePath){
     updateHistUI();setActiveTool(null);
     switchTab('orig');setZoom(1);showCanvas();CO.style.display='block';CR.style.display='none';CH.style.display='none';
     updateMode();
-  };
-  img.onerror=()=>alert('Cannot decode image');
-  img.src=dataUrl;
-}
-function loadFile(file){
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>loadImageFromDataUrl(ev.target.result,file.name,file.path);
-  reader.onerror=()=>alert('Cannot read file');
-  reader.readAsDataURL(file);
+  };img.onerror=()=>alert('Cannot decode image');img.src=ev.target.result;};
+  reader.onerror=()=>alert('Cannot read file');reader.readAsDataURL(file);
 }
 
 /*━━ REDUCE ━━*/
@@ -2602,21 +2545,7 @@ function canvasToBmp(canvas,filename){
   const rs=Math.floor((w*3+3)/4)*4,ps=rs*h,fs=54+ps,buf=new ArrayBuffer(fs),view=new DataView(buf);
   view.setUint8(0,0x42);view.setUint8(1,0x4D);view.setUint32(2,fs,true);view.setUint32(6,0,true);view.setUint32(10,54,true);view.setUint32(14,40,true);view.setInt32(18,w,true);view.setInt32(22,-h,true);view.setUint16(26,1,true);view.setUint16(28,24,true);view.setUint32(30,0,true);view.setUint32(34,ps,true);view.setInt32(38,2835,true);view.setInt32(42,2835,true);
   let off=54;for(let y=0;y<h;y++){for(let x=0;x<w;x++){const s=(y*w+x)*4;view.setUint8(off++,d[s+2]);view.setUint8(off++,d[s+1]);view.setUint8(off++,d[s]);}for(let p=0;p<(rs-w*3);p++)view.setUint8(off++,0);}
-  const blob=new Blob([buf],{type:'image/bmp'});
-  if (window.electronAPI && window.electronAPI.saveExportedImage) {
-    const reader = new FileReader();
-    reader.onload = async function() {
-      const base64data = reader.result.split(',')[1];
-      const success = await window.electronAPI.saveExportedImage(base64data, filename || 'output.bmp', imgInfo && imgInfo.path);
-      if (success) {
-        const sl=$('status');sl.textContent='Saved ✓';sl.style.display='block';
-        setTimeout(()=>sl.style.display='none', 2000);
-      }
-    };
-    reader.readAsDataURL(blob);
-  } else {
-    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename||'output.bmp';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  }
+  const blob=new Blob([buf],{type:'image/bmp'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename||'output.bmp';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function exportBmp(){canvasToBmp(curTab==='reduced'?CR:CO,`reduced_${palette.length}colors.bmp`);}
 
@@ -2695,7 +2624,6 @@ function setActiveTool(name){
     const el=$('ttab-'+t);if(el)el.classList.toggle('on',activeTool===t);
   });
   $('btn-pan').classList.toggle('on',activeTool==='pan');
-  if(prev==='outline'&&activeTool!=='outline')_exitOlPickMode();
   // Return previous tool's .tp node to its popup before switching
   if(prev&&prev!=='pan')_returnTpToPopup(prev);
   // Open sidebar panel for new tool, close if deactivated
@@ -2808,30 +2736,9 @@ function doFillAt(e,hexColor){
   if(fillMode==='single')floodFill(pos.x,pos.y,fillRgb,CR);
   else replacePxColor([px[0],px[1],px[2]],fillRgb,CR);
   if(hlColors.length)renderHL();
-  updatePaletteAfterFill();
 }
 function doFill(e){
   doFillAt(e,activeToolColor);
-}
-function updatePaletteAfterFill(){
-  if(!palette.length)return;
-  const imgData=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
-  const presentColors=extractAllUnique(imgData.data);
-  const tol=6;
-  let newPal=palette.filter(pc=>
-    presentColors.some(ic=>
-      Math.abs(ic[0]-pc[0])<=tol&&Math.abs(ic[1]-pc[1])<=tol&&Math.abs(ic[2]-pc[2])<=tol
-    )
-  );
-  presentColors.forEach(ic=>{
-    if(!newPal.some(pc=>
-      Math.abs(ic[0]-pc[0])<=tol&&Math.abs(ic[1]-pc[1])<=tol&&Math.abs(ic[2]-pc[2])<=tol
-    ))newPal.push(ic);
-  });
-  if(!newPal.length)return;
-  const{sorted,pcts}=sortByCoverage(newPal,imgData);
-  palette=sorted;palOrig=palette.map(c=>[...c]);palPcts=pcts;
-  renderPalette(palette,palPcts);
 }
 
 /*━━ UNIVERSAL PAN — right-click hold+drag OR middle-click from any tool ━━*/
@@ -2970,6 +2877,7 @@ window.addEventListener('mouseup',()=>{
 /*━━ OUTLINE TOOL ━━*/
 const EDGE_DIRS={tl:[-1,-1],t:[0,-1],tr:[1,-1],l:[-1,0],r:[1,0],bl:[-1,1],b:[0,1],br:[1,1]};
 
+// Read per-direction pixel values from direction grid inputs
 function getOutlineDirPx(){
   const result={};
   document.querySelectorAll('.ol-dir-inp[data-dir]').forEach(inp=>{
@@ -2978,6 +2886,7 @@ function getOutlineDirPx(){
   return result;
 }
 
+// Build offset coordinates for one direction — always pixel-by-pixel stepping
 function buildOffsets(dirKey,px){
   const[dx,dy]=EDGE_DIRS[dirKey];
   const offsets=[];
@@ -2986,9 +2895,9 @@ function buildOffsets(dirKey,px){
   return offsets;
 }
 
+// Click canvas → pick source color → apply outline
 /*━━ OUTLINE COLOR GROUP ━━*/
-let olColorGroup=[];
-let _olPickMode=false;
+let olColorGroup=[]; // array of {hex, rgb, clicks:[{x,y,mask}]} — one entry per unique color
 
 function olGroupKey(rgb){return(rgb[0]<<16)|(rgb[1]<<8)|rgb[2];}
 
@@ -2996,7 +2905,11 @@ function olAddToGroup(pos, rgb, mask){
   const key=olGroupKey(rgb);
   const hex=toHex(rgb);
   let entry=olColorGroup.find(e=>e.key===key);
-  if(!entry){entry={key,hex,rgb,clicks:[]};olColorGroup.push(entry);}
+  if(!entry){
+    entry={key,hex,rgb,clicks:[]};
+    olColorGroup.push(entry);
+  }
+  // In Single mode: store each click's mask separately; Similar mode: no mask needed
   entry.clicks.push({x:pos.x,y:pos.y,mask});
   olRenderStrip();
 }
@@ -3020,64 +2933,7 @@ function olRenderStrip(){
   });
 }
 
-function olClearGroup(){_exitOlPickMode();olColorGroup=[];olRenderStrip();COUT.style.display='none';}
-
-function _enterOlPickMode(){
-  _olPickMode=true;
-  const btn=$('ol-group-pick-btn');
-  if(btn){btn.classList.add('picking');btn.textContent='🎯 Picking… (Esc to stop)';}
-  VP.style.cursor='crosshair';
-  showOlStatus('Click canvas colors to add to group','#0078d4');
-}
-
-function _exitOlPickMode(){
-  if(!_olPickMode)return;
-  _olPickMode=false;
-  const btn=$('ol-group-pick-btn');
-  if(btn){btn.classList.remove('picking');btn.textContent='🎯 Pick Colors';}
-  VP.style.cursor='';
-  updateVpCursor();
-}
-
-function doOutlineAt(e){
-  if(!imgInfo||curTab!=='reduced')return;
-  const pos=getCanvasPx(e,CR);if(!pos)return;
-  const px=CR.getContext('2d').getImageData(pos.x,pos.y,1,1).data;
-  if(px[3]<10)return;
-  const srcRgb=[px[0],px[1],px[2]];
-
-  if(_olPickMode){
-    olAddToGroup(pos,srcRgb,null);
-    showOlStatus('+ Added to group ('+olColorGroup.length+' color'+(olColorGroup.length>1?'s':'')+')', '#0078d4');
-    return;
-  }
-
-  const isSimilar=document.getElementById('ol-area-all')?.checked;
-
-  if(!olColorGroup.length){
-    pushUndo();
-    const mask=isSimilar?null:buildConnectedMask(pos.x,pos.y,srcRgb);
-    applyOutline(srcRgb,mask);
-    return;
-  }
-
-  const tol=16;
-  const entry=olColorGroup.find(g=>
-    Math.abs(srcRgb[0]-g.rgb[0])<=tol&&
-    Math.abs(srcRgb[1]-g.rgb[1])<=tol&&
-    Math.abs(srcRgb[2]-g.rgb[2])<=tol
-  );
-
-  if(!entry){showOlStatus('Color not in group — use 🎯 Pick Colors to add','#999');return;}
-
-  if(!isSimilar){
-    olColorGroup.forEach(e=>{e.clicks=[];});
-    entry.clicks=[{x:pos.x,y:pos.y,mask:null}];
-  }
-
-  pushUndo();
-  olApplyGroupOutline();
-}
+function olClearGroup(){olColorGroup=[];olRenderStrip();}
 
 function olApplyGroupOutline(){
   if(!olColorGroup.length){showOlStatus('Add colors first — click canvas','#d32f2f');return;}
@@ -3092,70 +2948,141 @@ function olApplyGroupOutline(){
   const idata=ctx.getImageData(0,0,CR.width,CR.height);
   const d=idata.data,w=CR.width,h=CR.height;
   const outlineRgb=hexToRgb(activeToolColor);
-  const tol=16,G=olColorGroup.length;
-  const dirs8=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+  const tol=16;
+  const G=olColorGroup.length;
 
-  const getGroupIdx=(x,y)=>{
-    const wx=((x%w)+w)%w,wy=((y%h)+h)%h,i=(wy*w+wx)*4;
+  // For each pixel: which group index (-1 if none)
+  function getGroupIdx(x,y){
+    const wx=((x%w)+w)%w,wy=((y%h)+h)%h;
+    const i=(wy*w+wx)*4;
     if(d[i+3]<10)return -1;
     for(let g=0;g<G;g++){
       const rgb=olColorGroup[g].rgb;
       if(Math.abs(d[i]-rgb[0])<=tol&&Math.abs(d[i+1]-rgb[1])<=tol&&Math.abs(d[i+2]-rgb[2])<=tol)return g;
     }
     return -1;
-  };
-
-  let validMask;
-
-  if(!isSimilar){
-    validMask=new Uint8Array(w*h);
-    const origins=olColorGroup.map(entry=>entry.clicks.length?entry.clicks[entry.clicks.length-1]:null).filter(Boolean);
-    const globalVisited=new Uint8Array(w*h);
-    for(const origin of origins){
-      const ox=((origin.x%w)+w)%w,oy=((origin.y%h)+h)%h,oi=oy*w+ox;
-      if(globalVisited[oi]||getGroupIdx(ox,oy)<0)continue;
-      const queue=[[ox,oy]],compPixels=[],colorsInComp=new Set(),visited=new Uint8Array(w*h);
-      visited[oi]=1;globalVisited[oi]=1;
-      for(let qi=0;qi<queue.length;qi++){
-        const[x,y]=queue[qi];
-        compPixels.push(y*w+x);
-        const gi=getGroupIdx(x,y);if(gi>=0)colorsInComp.add(gi);
-        for(const[dx,dy]of dirs8){
-          const nx=((x+dx)%w+w)%w,ny=((y+dy)%h+h)%h,ni=ny*w+nx;
-          if(visited[ni]||getGroupIdx(nx,ny)<0)continue;
-          visited[ni]=1;globalVisited[ni]=1;queue.push([nx,ny]);
-        }
-      }
-      if(colorsInComp.size===G){for(const pi of compPixels)validMask[pi]=1;}
-    }
-  } else {
-    const componentId=new Int32Array(w*h).fill(-1);
-    let compCount=0;const compColors=[];
-    for(let sy=0;sy<h;sy++)for(let sx=0;sx<w;sx++){
-      if(componentId[sy*w+sx]>=0||getGroupIdx(sx,sy)<0)continue;
-      const cid=compCount++,colorsInComp=new Set(),queue=[[sx,sy]];
-      componentId[sy*w+sx]=cid;
-      for(let qi=0;qi<queue.length;qi++){
-        const[x,y]=queue[qi];
-        const gi=getGroupIdx(x,y);if(gi>=0)colorsInComp.add(gi);
-        for(const[dx,dy]of dirs8){
-          const nx=((x+dx)%w+w)%w,ny=((y+dy)%h+h)%h,ni=ny*w+nx;
-          if(componentId[ni]>=0||getGroupIdx(nx,ny)<0)continue;
-          componentId[ni]=cid;queue.push([nx,ny]);
-        }
-      }
-      compColors.push(colorsInComp);
-    }
-    const validComp=compColors.map(s=>s.size===G);
-    validMask=new Uint8Array(w*h);
-    for(let i=0;i<w*h;i++){const cid=componentId[i];if(cid>=0&&validComp[cid])validMask[i]=1;}
   }
 
+  // --- BUILD VALID MASK ---
+  // For Single mode: use the last-click connected mask per entry
+  // For Similar mode: flood-fill connected components of ANY group color,
+  //   keep only components that contain ALL group colors
+  let validMask; // Uint8Array — pixels eligible for outline
+
+  if(!isSimilar){
+    // Single: from the clicked point, flood-fill the connected component
+    // of ALL group-color pixels together, then validate it has all G colors.
+    // Each entry stores the click position; use the last-clicked entry's position.
+    const dirs8=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+    validMask=new Uint8Array(w*h);
+
+    // Collect all click origins (one per entry, last click)
+    const origins=[];
+    olColorGroup.forEach(entry=>{
+      if(entry.clicks&&entry.clicks.length){
+        const c=entry.clicks[entry.clicks.length-1];
+        origins.push({x:c.x,y:c.y});
+      }
+    });
+
+    // For each origin, flood-fill connected group-color region, keep if has all colors
+    const globalVisited=new Uint8Array(w*h);
+    for(const origin of origins){
+      const ox=((origin.x%w)+w)%w, oy=((origin.y%h)+h)%h;
+      const oi=oy*w+ox;
+      if(globalVisited[oi])continue; // already part of a processed component
+      if(getGroupIdx(ox,oy)<0)continue;
+
+      // BFS
+      const queue=[[ox,oy]];
+      const compPixels=[];
+      const colorsInComp=new Set();
+      const visited=new Uint8Array(w*h);
+      visited[oi]=1;globalVisited[oi]=1;
+
+      for(let qi=0;qi<queue.length;qi++){
+        const [x,y]=queue[qi];
+        compPixels.push(y*w+x);
+        const gi=getGroupIdx(x,y);
+        if(gi>=0)colorsInComp.add(gi);
+        for(const [dx,dy] of dirs8){
+          const nx=((x+dx)%w+w)%w, ny=((y+dy)%h+h)%h;
+          const ni=ny*w+nx;
+          if(visited[ni])continue;
+          if(getGroupIdx(nx,ny)<0)continue;
+          visited[ni]=1;globalVisited[ni]=1;
+          queue.push([nx,ny]);
+        }
+      }
+      // Only mark valid if this component has ALL group colors
+      if(colorsInComp.size===G){
+        for(const pi of compPixels)validMask[pi]=1;
+      }
+    }
+  } else {
+    // Similar: find connected components (8-dir, wrap) of ALL group-color pixels
+    // then keep components that contain all G group colors
+    const componentId=new Int32Array(w*h).fill(-1);
+    let compCount=0;
+    const compColors=[]; // per component: Set of group indices present
+
+    const dirs8=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+
+    for(let sy=0;sy<h;sy++){
+      for(let sx=0;sx<w;sx++){
+        if(componentId[sy*w+sx]>=0)continue;
+        const gIdx=getGroupIdx(sx,sy);
+        if(gIdx<0)continue;
+        // BFS flood-fill this component
+        const cid=compCount++;
+        const colorsInComp=new Set();
+        const queue=[[sx,sy]];
+        componentId[sy*w+sx]=cid;
+        for(let qi=0;qi<queue.length;qi++){
+          const [x,y]=queue[qi];
+          const wx=((x%w)+w)%w,wy=((y%h)+h)%h;
+          const gi=getGroupIdx(wx,wy);
+          if(gi>=0)colorsInComp.add(gi);
+          for(const [dx,dy] of dirs8){
+            const nx=x+dx,ny=y+dy;
+            const nwx=((nx%w)+w)%w,nwy=((ny%h)+h)%h;
+            const ni=nwy*w+nwx;
+            if(componentId[ni]>=0)continue;
+            if(getGroupIdx(nx,ny)<0)continue;
+            componentId[ni]=cid;
+            queue.push([nx,ny]);
+          }
+        }
+        compColors.push(colorsInComp);
+      }
+    }
+
+    // A component is valid only if it contains ALL group colors
+    const validComp=compColors.map(s=>s.size===G);
+
+    validMask=new Uint8Array(w*h);
+    for(let i=0;i<w*h;i++){
+      const cid=componentId[i];
+      if(cid>=0&&validComp[cid])validMask[i]=1;
+    }
+  }
+
+  // --- APPLY OUTLINE on validMask pixels only ---
   const marked=new Uint8Array(w*h);
+
   for(let g=0;g<G;g++){
-    const matchesSrc=(x,y)=>{const wx=((x%w)+w)%w,wy=((y%h)+h)%h;return validMask[wy*w+wx]&&getGroupIdx(wx,wy)===g;};
-    const isOtherGroup=(x,y)=>{const wx=((x%w)+w)%w,wy=((y%h)+h)%h;const gi=getGroupIdx(wx,wy);return gi>=0&&gi!==g;};
-    for(const[dirKey,px]of Object.entries(dirPx)){
+    function matchesSrc(x,y){
+      const wx=((x%w)+w)%w,wy=((y%h)+h)%h;
+      if(!validMask[wy*w+wx])return false;
+      return getGroupIdx(wx,wy)===g;
+    }
+    function isOtherGroup(x,y){
+      const wx=((x%w)+w)%w,wy=((y%h)+h)%h;
+      const gi=getGroupIdx(wx,wy);
+      return gi>=0&&gi!==g;
+    }
+
+    for(const[dirKey,px] of Object.entries(dirPx)){
       if(px<=0)continue;
       const offsets=buildOffsets(dirKey,px);
       if(typeInside){
@@ -3163,7 +3090,10 @@ function olApplyGroupOutline(){
           if(!matchesSrc(x,y))continue;
           for(const[ox,oy]of offsets){
             const nx=((x+ox)%w+w)%w,ny=((y+oy)%h+h)%h;
-            if(!matchesSrc(nx,ny)){if(isOtherGroup(nx,ny))break;marked[y*w+x]=1;break;}
+            if(!matchesSrc(nx,ny)){
+              if(isOtherGroup(nx,ny))break;
+              marked[y*w+x]=1;break;
+            }
           }
         }
       } else {
@@ -3187,31 +3117,191 @@ function olApplyGroupOutline(){
     const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;
   }
   ctx.putImageData(new ImageData(out,w,h),0,0);
-  COUT.style.display='none';
   if(hlColors.length)renderHL();
-  showOlStatus('✓ '+count.toLocaleString()+' px outlined ('+G+' color'+(G>1?'s':'')+')', '#388e3c');
+  showOlStatus('✓ '+count.toLocaleString()+' px outlined ('+olColorGroup.length+' color'+(olColorGroup.length>1?'s':'')+')', '#388e3c');
 }
 
-// 8-directional BFS connected region mask with wrap coords (tol=16)
+/*━━ OUTLINE GROUP PICK MODE ━━*/
+let _olPickMode=false;
+
+function _enterOlPickMode(){
+  _olPickMode=true;
+  const btn=$('ol-group-pick-btn');
+  if(btn){btn.classList.add('picking');btn.textContent='🎯 Picking… (Esc to stop)';}
+  VP.style.cursor='crosshair';
+  showOlStatus('Click canvas colors to add to group','#0078d4');
+}
+function _exitOlPickMode(){
+  _olPickMode=false;
+  const btn=$('ol-group-pick-btn');
+  if(btn){btn.classList.remove('picking');btn.textContent='🎯 Pick Colors';}
+  VP.style.cursor='';
+  updateVpCursor();
+}
+
+function doOutlineAt(e){
+  if(!imgInfo||curTab!=='reduced')return;
+  const pos=getCanvasPx(e,CR);if(!pos)return;
+  const px=CR.getContext('2d').getImageData(pos.x,pos.y,1,1).data;
+  if(px[3]<10)return;
+  const srcRgb=[px[0],px[1],px[2]];
+
+  if(_olPickMode){
+    olAddToGroup(pos,srcRgb,null);
+    showOlStatus('+ Added to group ('+olColorGroup.length+' color'+(olColorGroup.length>1?'s':'')+')', '#0078d4');
+    return;
+  }
+
+  const isSimilar=document.getElementById('ol-area-all')?.checked;
+
+  // No group colors — standard behavior (just clicked color)
+  if(!olColorGroup.length){
+    pushUndo();
+    const mask=isSimilar?null:buildConnectedMask(pos.x,pos.y,srcRgb);
+    applyOutline(srcRgb,mask);
+    return;
+  }
+
+  // Group has colors — check if clicked color is in group
+  const tol=16;
+  const entry=olColorGroup.find(g=>
+    Math.abs(srcRgb[0]-g.rgb[0])<=tol &&
+    Math.abs(srcRgb[1]-g.rgb[1])<=tol &&
+    Math.abs(srcRgb[2]-g.rgb[2])<=tol
+  );
+
+  if(!entry){
+    showOlStatus('Color not in group — use 🎯 Pick Colors to add','#999');
+    return;
+  }
+
+  if(!isSimilar){
+    // Single — clear all clicks, store only current
+    olColorGroup.forEach(e=>{ e.clicks=[]; });
+    entry.clicks=[{x:pos.x,y:pos.y,mask:null}];
+  }
+
+  pushUndo();
+  olApplyGroupOutline();
+}
+
+// Returns pixel count painted — works on current CR ImageData in-place
+function applyOutlineGroup(srcRgbs, connectedMask=null, skipPush=false){
+  if(!imgInfo||curTab!=='reduced')return 0;
+  const typeInside=document.getElementById('ol-type-inside').checked;
+  const dirPx=getOutlineDirPx();
+  const hasAny=Object.values(dirPx).some(v=>v>0);
+  if(!hasAny){showOlStatus('Set at least one direction > 0','#d32f2f');return 0;}
+
+  const ctx=CR.getContext('2d');
+  const idata=ctx.getImageData(0,0,CR.width,CR.height);
+  const d=idata.data,w=CR.width,h=CR.height;
+  const outlineRgb=hexToRgb(activeToolColor);
+  const tol=12;
+
+  // All grouped RGBs (every color in the group, not just current srcRgbs)
+  const allGroupRgbs=olColorGroup.map(e=>e.rgb);
+
+  function matchesRgbList(x,y,rgbList){
+    const i=(y*w+x)*4;
+    if(d[i+3]<10)return false;
+    for(const rgb of rgbList){
+      if(Math.abs(d[i]-rgb[0])<=tol&&Math.abs(d[i+1]-rgb[1])<=tol&&Math.abs(d[i+2]-rgb[2])<=tol)return true;
+    }
+    return false;
+  }
+
+  function matchesSrc(x,y){
+    const i=(y*w+x)*4;
+    if(d[i+3]<10)return false;
+    for(const srcRgb of srcRgbs){
+      if(Math.abs(d[i]-srcRgb[0])<=tol&&Math.abs(d[i+1]-srcRgb[1])<=tol&&Math.abs(d[i+2]-srcRgb[2])<=tol){
+        if(connectedMask&&!connectedMask[y*w+x])continue;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Returns true if pixel (x,y) is a different grouped color (not srcRgbs)
+  function isOtherGroupColor(x,y){
+    if(x<0||x>=w||y<0||y>=h)return false;
+    if(matchesSrc(x,y))return false; // same src color — not "other"
+    return matchesRgbList(x,y,allGroupRgbs);
+  }
+
+  const marked=new Uint8Array(w*h);
+  for(const[dirKey,px] of Object.entries(dirPx)){
+    if(px<=0)continue;
+    const offsets=buildOffsets(dirKey,px);
+    if(typeInside){
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        if(!matchesSrc(x,y))continue;
+        for(const[ox,oy]of offsets){
+          // Wrap coords — image repeats like tiles so edges connect to opposite side
+          const nx=((x+ox)%w+w)%w, ny=((y+oy)%h+h)%h;
+          if(!matchesSrc(nx,ny)){
+            if(isOtherGroupColor(nx,ny))break;
+            marked[y*w+x]=1;break;
+          }
+        }
+      }
+    } else {
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const i=(y*w+x)*4;
+        if(d[i+3]>10&&matchesSrc(x,y))continue;
+        if(isOtherGroupColor(x,y))continue;
+        for(const[ox,oy]of offsets){
+          // Outside: negate offset — look back toward src from outward direction
+          const nx=((x-ox)%w+w)%w, ny=((y-oy)%h+h)%h;
+          if(matchesSrc(nx,ny)){marked[y*w+x]=1;break;}
+        }
+      }
+    }
+  }
+
+  const out=new Uint8ClampedArray(d);
+  let count=0;
+  for(let i=0;i<marked.length;i++){
+    if(!marked[i])continue;count++;
+    const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;
+  }
+  ctx.putImageData(new ImageData(out,w,h),0,0);
+  return count;
+}
+
+// BFS connected region mask — same as flood fill boundary detection
 function buildConnectedMask(sx,sy,srcRgb){
   const ctx=CR.getContext('2d');
   const d=ctx.getImageData(0,0,CR.width,CR.height).data;
   const w=CR.width,h=CR.height,tol=16;
-  const matches=(x,y)=>{
-    const wx=((x%w)+w)%w,wy=((y%h)+h)%h,i=(wy*w+wx)*4;
-    return d[i+3]>10&&Math.abs(d[i]-srcRgb[0])<=tol&&Math.abs(d[i+1]-srcRgb[1])<=tol&&Math.abs(d[i+2]-srcRgb[2])<=tol;
-  };
-  const mask=new Uint8Array(w*h),visited=new Uint8Array(w*h);
+  function matches(x,y){
+    // Wrap coords for tiled images
+    const wx=((x%w)+w)%w, wy=((y%h)+h)%h;
+    const i=(wy*w+wx)*4;
+    return d[i+3]>10
+      &&Math.abs(d[i]  -srcRgb[0])<=tol
+      &&Math.abs(d[i+1]-srcRgb[1])<=tol
+      &&Math.abs(d[i+2]-srcRgb[2])<=tol;
+  }
+  const mask=new Uint8Array(w*h);
+  const visited=new Uint8Array(w*h);
+  const startIdx=sy*w+sx;
   if(!matches(sx,sy))return mask;
-  const stack=[[sx,sy]];visited[sy*w+sx]=1;
-  const dirs8=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+  const stack=[[sx,sy]];
+  visited[startIdx]=1;
+  // 8-directional neighbours
+  const dirs=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
   while(stack.length){
-    const[x,y]=stack.pop();
-    mask[((y%h+h)%h)*w+((x%w+w)%w)]=1;
-    for(const[dx,dy]of dirs8){
-      const nx=x+dx,ny=y+dy;
-      const nwx=((nx%w)+w)%w,nwy=((ny%h)+h)%h,ni=nwy*w+nwx;
-      if(visited[ni])continue;visited[ni]=1;
+    const [x,y]=stack.pop();
+    const wx=((x%w)+w)%w, wy=((y%h)+h)%h;
+    mask[wy*w+wx]=1;
+    for(const [dx,dy] of dirs){
+      const nx=x+dx, ny=y+dy;
+      const nwx=((nx%w)+w)%w, nwy=((ny%h)+h)%h;
+      const ni=nwy*w+nwx;
+      if(visited[ni])continue;
+      visited[ni]=1;
       if(matches(nx,ny))stack.push([nx,ny]);
     }
   }
@@ -3315,38 +3405,27 @@ function buildCmRows(){
   let rCount=0;
   order.forEach((palIdx,rowIdx)=>{
     const origRgb=palette[palIdx],hex=toHex(origRgb),px=counts[palIdx]||0,pct=total>0?(px/total*100):0;
-    const row=document.createElement('div');row.className='cmr'+(isHlActive(origRgb)?' hl-on':'');
-    row._rgb=origRgb;
-    row.onclick=(e)=>{
-      if(e.target.closest('input,button,.cm-sw'))return;
-      if(hlMode)toggleHlColor(origRgb);
-    };
-    const sw=document.createElement('div');sw.className='cm-sw';sw.style.background=hex;
-    sw.title=hlMode?'Highlight '+hex:'Copy '+hex;
-    sw.onclick=()=>{if(hlMode){toggleHlColor(origRgb);}else{navigator.clipboard?.writeText(hex);}};
+    const row=document.createElement('div');row.className='cmr';
+    const sw=document.createElement('div');sw.className='cm-sw';sw.style.background=hex;sw.title='Copy '+hex;sw.onclick=()=>navigator.clipboard?.writeText(hex);
+    const info=document.createElement('div');info.innerHTML='<div class="cm-hex">'+hex.toUpperCase()+'</div><div class="cm-rgb">rgb('+origRgb.join(', ')+')</div>';
     const pw=document.createElement('div');const bt=document.createElement('div');bt.className='cm-bar-track';const bf=document.createElement('div');bf.className='cm-bar-fill';bf.style.background=hex;bt.appendChild(bf);const pl=document.createElement('div');pl.className='cm-pct-line';pl.innerHTML='<span class="cm-pct-big">'+pct.toFixed(1)+'%</span><span class="cm-pct-sm">coverage</span><span class="cm-px"> · '+px.toLocaleString()+' px</span>';pw.appendChild(bt);pw.appendChild(pl);
     requestAnimationFrame(()=>setTimeout(()=>{bf.style.width=(px/maxC*100).toFixed(1)+'%';},40+rowIdx*14));
     const rep=document.createElement('div');rep.className='cm-rep';
-    const ci=document.createElement('input');ci.type='color';ci.className='ci';ci.style.cssText='width:26px;height:24px;';ci.value=hex;
+    const rlbl=document.createElement('div');rlbl.className='cm-rep-lbl';rlbl.textContent='Replace';
+    const ci=document.createElement('input');ci.type='color';ci.className='ci';ci.style.cssText='width:28px;height:26px;';ci.value=hex;
     const lb=document.createElement('button');lb.className='cm-lib-btn';lb.title='From library';lb.textContent='📚';
     const ab=document.createElement('button');ab.className='cm-apply-btn';ab.textContent='Apply';
     const doApply=()=>{
       if(ab.classList.contains('done'))return;const newHex=ci.value,newRgb=hexToRgb(newHex);
       if(newHex.toLowerCase()===toHex(palette[palIdx]).toLowerCase())return;
       pushUndo();replacePxColor(palette[palIdx],newRgb);palette[palIdx]=newRgb;
-      const prevLen=palette.length;
-      palette=dedupPalette(palette);
-      const imgDataCm=CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
-      const{sorted:cmS,pcts:cmP}=sortByCoverage(palette,imgDataCm);
-      palette=cmS;palOrig=palette.map(c=>[...c]);palPcts=cmP;
-      sw.style.background=newHex;bf.style.background=newHex;
-      ab.textContent='✓ Done';ab.classList.add('done');row.classList.add('replaced');
+      sw.style.background=newHex;info.innerHTML='<div class="cm-hex">'+newHex.toUpperCase()+'</div><div class="cm-rgb">rgb('+newRgb.join(', ')+')</div>';
+      bf.style.background=newHex;ab.textContent='✓ Done';ab.classList.add('done');row.classList.add('replaced');
       renderPalette(palette,palPcts);rCount++;$('cm-fnote').textContent=rCount+' replaced';
-      if(palette.length<prevLen)buildCmRows();
     };
     ab.onclick=doApply;lb.onclick=()=>{lcFillMode=false;lcCallback=h=>{ci.value=h;};openLcModal();};
-    rep.appendChild(ci);rep.appendChild(lb);rep.appendChild(ab);
-    row.appendChild(sw);row.appendChild(pw);row.appendChild(rep);list.appendChild(row);
+    rep.appendChild(rlbl);rep.appendChild(ci);rep.appendChild(lb);rep.appendChild(ab);
+    row.appendChild(sw);row.appendChild(info);row.appendChild(pw);row.appendChild(rep);list.appendChild(row);
   });
   $('cm-fnote').textContent=palette.length+' colors · by coverage';
 }
@@ -3364,31 +3443,7 @@ $('cm-reset').onclick=()=>{
   palette=palOrig.map(c=>[...c]);renderPalette(palette,palPcts);buildCmRows();updateSize();
 };
 $('cm-close').onclick=closeColorMap;
-
-// Forward wheel zoom from Color Map window to canvas
-$('cm-win').addEventListener('wheel',e=>{
-  if(!imgInfo)return;
-  if(e.target.closest('#cm-list'))return;
-  e.preventDefault();
-  const oldZ=zoomRef.v;
-  const newZ=e.deltaY<0?(ZSTEPS.find(s=>s>oldZ)||12):([...ZSTEPS].reverse().find(s=>s<oldZ)||0.1);
-  if(newZ===oldZ)return;
-  const r=VP.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-  const cx=VP.scrollLeft+mx,cy=VP.scrollTop+my,sc=newZ/oldZ;
-  setZoom(newZ);requestAnimationFrame(()=>{VP.scrollLeft=cx*sc-mx;VP.scrollTop=cy*sc-my;});
-},{passive:false});
-
-// Forward canvas tool interactions from Color Map window to canvas
-$('cm-win').addEventListener('mousedown',e=>{
-  if(!imgInfo||!activeTool||activeTool==='pan'||curTab!=='reduced')return;
-  if(e.target.closest('button,input,select,a,.cm-sw,.cmr,#cm-hdr,#cm-resize'))return;
-  e.preventDefault();e.stopPropagation();
-  if(activeTool==='paint'){
-    VP.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true,clientX:e.clientX,clientY:e.clientY,button:0}));
-  }else{
-    VP.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:e.clientX,clientY:e.clientY}));
-  }
-},false);
+$('cm-ov').onclick=e=>{if(e.target===$('cm-ov'))closeColorMap();};
 
 /*━━ UNIFIED LIBRARY WINDOW ━━*/
 let libCurrentMode='manage'; // 'manage' | 'pick'
@@ -3497,44 +3552,6 @@ $('lm-ov').onclick=e=>{if(e.target===$('lm-ov'))closeLibManager();};
     if(!resizing)return;
     win.style.width=Math.max(420,sw+(e.clientX-sx))+'px';
     win.style.height=Math.max(200,sh+(e.clientY-sy))+'px';
-  });
-  document.addEventListener('mouseup',()=>{resizing=false;});
-})();
-
-// Color Map — drag
-(function(){
-  const win=$('cm-win'),hdr=$('cm-hdr');
-  let drag=false,ox=0,oy=0,wx=0,wy=0;
-  hdr.addEventListener('mousedown',e=>{
-    if(e.button!==0)return;
-    const r=win.getBoundingClientRect();
-    win.style.transform='none';
-    if(!win.style.left||win.style.left===''){win.style.left=r.left+'px';win.style.top=r.top+'px';}
-    drag=true;ox=e.clientX;oy=e.clientY;wx=parseFloat(win.style.left)||0;wy=parseFloat(win.style.top)||0;
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove',e=>{
-    if(!drag)return;
-    win.style.left=clamp(wx+(e.clientX-ox),0,window.innerWidth-80)+'px';
-    win.style.top=clamp(wy+(e.clientY-oy),0,window.innerHeight-40)+'px';
-  });
-  document.addEventListener('mouseup',()=>{drag=false;});
-})();
-
-// Color Map — resize
-(function(){
-  const win=$('cm-win'),handle=$('cm-resize');
-  let resizing=false,sx=0,sy=0,sw=0,sh=0;
-  handle.addEventListener('mousedown',e=>{
-    if(e.button!==0)return;
-    resizing=true;sx=e.clientX;sy=e.clientY;
-    const r=win.getBoundingClientRect();sw=r.width;sh=r.height;
-    e.preventDefault();e.stopPropagation();
-  });
-  document.addEventListener('mousemove',e=>{
-    if(!resizing)return;
-    win.style.width=Math.max(280,sw+(e.clientX-sx))+'px';
-    win.style.height=Math.max(180,sh+(e.clientY-sy))+'px';
   });
   document.addEventListener('mouseup',()=>{resizing=false;});
 })();
@@ -3716,8 +3733,14 @@ $('hl-clear').onclick=clearHL;
 $('rpal-clear').onclick=clearHL;
 
 // Highlight Mode toggle button
-$('btn-hl-mode').onclick=()=>toggleHighlightMode();
-if($('cm-btn-hl-mode'))$('cm-btn-hl-mode').onclick=()=>toggleHighlightMode();
+$('btn-hl-mode').onclick=function(){
+  hlMode=!hlMode;
+  this.style.background=hlMode?'#cce4f7':'#e1e1e1';
+  this.style.borderColor=hlMode?'#0078d4':'#adadad';
+  this.style.color=hlMode?'#005a9e':'#555';
+  this.style.fontWeight=hlMode?'700':'400';
+  this.title=hlMode?'Highlight Mode ON — click a swatch to highlight':'Toggle Highlight Mode — then click a swatch to highlight it on canvas';
+};
 
 /*━━ RIGHT TABBED PANEL ━━*/
 function rtpSwitch(tab){
@@ -3937,7 +3960,7 @@ document.addEventListener('keydown',e=>{
     if(tag==='INPUT'||tag==='TEXTAREA')return;
     if(imgInfo)setActiveTool(activeTool==='pan'?null:'pan');
   }
-  // SPACE = commit hovered canvas color to active tool (fill/paint/outline)
+  // SPACE = pick hovered canvas color into active tool (fill/paint/outline)
   if(e.key===' '||e.key==='Spacebar'){
     const tag=document.activeElement.tagName;
     if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
@@ -3951,17 +3974,20 @@ document.addEventListener('keydown',e=>{
 
 /*━━ TOOL HOVER COLOR TRACKING ━━*/
 let _toolHoverHex=null;
+let _toolHoverPos=null;
 let _toolSwatchPickMode=false;
 
 const TOOL_SW_IDS={fill:'fill-active-sw',paint:'paint-active-sw',outline:'outline-active-sw'};
 
 function _getToolCanvas(){return curTab==='reduced'?CR:(curTab==='orig'?CO:null);}
 
-function _updateToolHover(hex){
+function _updateToolHover(hex,pos){
   _toolHoverHex=hex;
+  if(pos)_toolHoverPos=pos;
 }
 function _clearToolHover(){
   _toolHoverHex=null;
+  _toolHoverPos=null;
 }
 function _flashSwatchPicked(){
   const swId=activeTool&&TOOL_SW_IDS[activeTool];if(!swId)return;
@@ -3980,7 +4006,7 @@ VP.addEventListener('mousemove',e=>{
   if(cx<0||cy<0||cx>=can.width||cy>=can.height){_clearToolHover();return;}
   const p=can.getContext('2d').getImageData(cx,cy,1,1).data;
   const hex=toHex([p[0],p[1],p[2]]);
-  _updateToolHover(hex);
+  _updateToolHover(hex,{x:cx,y:cy});
   // In pick mode: live-preview the hovered color on the swatch
   if(_toolSwatchPickMode){const swId=TOOL_SW_IDS[activeTool];if(swId)$(swId).style.background=hex;}
 });
@@ -4030,32 +4056,11 @@ document.addEventListener('keydown',e=>{
 },{capture:true});
 
 /*━━ BINDINGS ━━*/
-// Prevent Electron from navigating when a file is dragged onto the window
-document.addEventListener('dragover',e=>e.preventDefault(),false);
-document.addEventListener('drop',e=>e.preventDefault(),false);
-
 const dropEl=$('drop');
-dropEl.onclick=async ()=>{
-  if(window.electronAPI&&window.electronAPI.openFileDialog){
-    const result=await window.electronAPI.openFileDialog();
-    if(!result)return;
-    loadImageFromDataUrl(result.dataUrl,result.name,result.path);
-  } else {
-    const inp=$('file-inp');inp.value='';inp.click();
-  }
-};
-dropEl.ondragover=e=>{e.stopPropagation();e.preventDefault();dropEl.classList.add('drag');};
+dropEl.onclick=()=>$('file-inp').click();
+dropEl.ondragover=e=>{e.preventDefault();dropEl.classList.add('drag');};
 dropEl.ondragleave=()=>dropEl.classList.remove('drag');
-dropEl.ondrop=async e=>{
-  e.stopPropagation();e.preventDefault();dropEl.classList.remove('drag');
-  const file=e.dataTransfer.files[0];
-  if(!file)return;
-  if(window.electronAPI&&window.electronAPI.readFilePath&&file.path){
-    const result=await window.electronAPI.readFilePath(file.path);
-    if(result){loadImageFromDataUrl(result.dataUrl,result.name,result.path);return;}
-  }
-  loadFile(file);
-};
+dropEl.ondrop=e=>{e.preventDefault();dropEl.classList.remove('drag');loadFile(e.dataTransfer.files[0]);};
 $('file-inp').onchange=e=>loadFile(e.target.files[0]);
 $('cnt-inp').oninput=function(){cntVal=this.value;validateCount(cntVal);applyCountUI();};
 document.querySelectorAll('.tb').forEach(b=>b.onclick=()=>{if(!b.disabled)switchTab(b.dataset.tab);});
@@ -4084,11 +4089,13 @@ document.addEventListener('click',e=>{
   }
   if(e.target&&e.target.id==='ol-group-clear'){_exitOlPickMode();olClearGroup();}
 });
+
 // Esc exits pick mode
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&_olPickMode){e.stopPropagation();_exitOlPickMode();}
 },{capture:true});
-// Center input syncs all 8 direction inputs
+
+// Center input syncs all 8 direction inputs instantly
 document.addEventListener('input',e=>{
   if(!e.target||e.target.id!=='ol-dir-center-inp')return;
   const val=Math.max(0,Math.min(99,parseInt(e.target.value)||0));
