@@ -107,7 +107,7 @@ ipcMain.handle('save-exported-image', async (event, base64data, defaultName, sou
   const result = await dialog.showSaveDialog({
     defaultPath: defaultPath,
     filters: [
-      { name: 'Bitmap Image', extensions: ['bmp'] }
+      { name: 'Paintbrush Picture', extensions: ['bmp'] }
     ]
   });
   

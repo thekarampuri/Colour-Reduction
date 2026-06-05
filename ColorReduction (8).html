@@ -2618,8 +2618,8 @@ async function doReduce(){
 function canvasToBmp(canvas,filename){
   const w=canvas.width,h=canvas.height,d=canvas.getContext('2d').getImageData(0,0,w,h).data;
   const rs=Math.floor((w*3+3)/4)*4,ps=rs*h,fs=54+ps,buf=new ArrayBuffer(fs),view=new DataView(buf);
-  view.setUint8(0,0x42);view.setUint8(1,0x4D);view.setUint32(2,fs,true);view.setUint32(6,0,true);view.setUint32(10,54,true);view.setUint32(14,40,true);view.setInt32(18,w,true);view.setInt32(22,-h,true);view.setUint16(26,1,true);view.setUint16(28,24,true);view.setUint32(30,0,true);view.setUint32(34,ps,true);view.setInt32(38,2835,true);view.setInt32(42,2835,true);
-  let off=54;for(let y=0;y<h;y++){for(let x=0;x<w;x++){const s=(y*w+x)*4;view.setUint8(off++,d[s+2]);view.setUint8(off++,d[s+1]);view.setUint8(off++,d[s]);}for(let p=0;p<(rs-w*3);p++)view.setUint8(off++,0);}
+  view.setUint8(0,0x42);view.setUint8(1,0x4D);view.setUint32(2,fs,true);view.setUint32(6,0,true);view.setUint32(10,54,true);view.setUint32(14,40,true);view.setInt32(18,w,true);view.setInt32(22,h,true);view.setUint16(26,1,true);view.setUint16(28,24,true);view.setUint32(30,0,true);view.setUint32(34,ps,true);view.setInt32(38,2835,true);view.setInt32(42,2835,true);
+  let off=54;for(let y=h-1;y>=0;y--){for(let x=0;x<w;x++){const s=(y*w+x)*4;view.setUint8(off++,d[s+2]);view.setUint8(off++,d[s+1]);view.setUint8(off++,d[s]);}for(let p=0;p<(rs-w*3);p++)view.setUint8(off++,0);}
   const blob=new Blob([buf],{type:'image/bmp'});
   if (window.electronAPI && window.electronAPI.saveExportedImage) {
     const reader = new FileReader();
