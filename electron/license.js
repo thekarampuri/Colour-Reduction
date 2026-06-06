@@ -6,8 +6,8 @@ const fs     = require('fs');
 
 // ── 1. PASTE YOUR PUBLIC KEY HERE ─────────────────────────────────────────────
 const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQSRU5A35y8h59ADIL4PUIP/qD1QB
-f1p5j2qM75mvoY3A84K9VYy2fm9gIhK97RBfx5AShOn7VIWlXuxQ7YNh4g==
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEq28Ml1uSn+e51jTU8NLsaimjEvG
+jsBg8ylJLB/DyDxQ4nvFO5tLApJ5RdU8y/4XOM6/+hPpUedI/JdDHkgbNA==
 -----END PUBLIC KEY-----`;
 // ─────────────────────────────────────────────────────────────────────────────
 
