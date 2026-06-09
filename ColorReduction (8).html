@@ -4186,14 +4186,17 @@ function drawSelectionOverlay(){
   CS.style.display=(curTab==='reduced')?'block':'none';
 }
 
-// Magic Wand: selects ALL pixels of the same color as clicked (flood-fill connected region).
-// Shift+click ADDS to existing selection without clearing it.
+// Magic Wand: ADDITIVE by default — each click adds the connected region to the selection.
+// Hold Shift to keep same behavior (still additive). Press Escape to clear selection.
 function doMagicWandAt(e){
   if(!imgInfo||curTab!=='reduced')return;
   const pos=getCanvasPx(e,CR);if(!pos)return;
   if(floatingSelection)commitFloatingSelection();
-  // Start fresh if no shift, otherwise add to existing
-  if(!e.shiftKey)initSelectionMask();
+  // Magic wand is always ADDITIVE — clicking another region adds it.
+  // Init mask only if there is no existing selection at all.
+  if(!selectionMask||selectionMask.length!==CR.width*CR.height){
+    selectionMask=new Uint8Array(CR.width*CR.height);
+  }
 
   const ctx=CR.getContext('2d'),id=ctx.getImageData(0,0,CR.width,CR.height),d=id.data,w=CR.width,h=CR.height;
   const idx=(pos.y*w+pos.x)*4;
@@ -4202,8 +4205,7 @@ function doMagicWandAt(e){
   // Flood fill from click point — contiguous region only (connected pixels of same color)
   const visited=new Uint8Array(w*h);
   const startP=pos.y*w+pos.x;
-  // Don't revisit already-selected pixels
-  if(!selectionMask||selectionMask.length!==w*h)selectionMask=new Uint8Array(w*h);
+  // Don't revisit already-selected pixels (prevents re-walking same region)
   for(let i=0;i<w*h;i++){if(selectionMask[i])visited[i]=1;}
   const stack=[startP];
   visited[startP]=1;
@@ -4360,10 +4362,12 @@ function pasteFromClipboard(){
   const fcv=document.createElement('canvas');fcv.width=src.width;fcv.height=src.height;
   const fCtx=fcv.getContext('2d');
   fCtx.drawImage(src,0,0);
-  // Place it at center-ish
-  const px=Math.max(0,Math.floor((CR.width-src.width)/2));
-  const py=Math.max(0,Math.floor((CR.height-src.height)/2));
+  // Place it slightly offset from the original so it's obviously a new paste
+  const px=Math.max(0,Math.min(CR.width-src.width,Math.floor((CR.width-src.width)/2)+8));
+  const py=Math.max(0,Math.min(CR.height-src.height,Math.floor((CR.height-src.height)/2)+8));
   floatingSelection={canvas:fcv,x:px,y:py};
+  // Auto-switch to move tool so user can drag pasted content immediately
+  setActiveTool('move');
   drawSelectionOverlay();
 }
 
