@@ -603,7 +603,7 @@ function sortByCoverage(pal,imageData){
 }
 function measureUsage(pal){const d=CR.getContext('2d').getImageData(0,0,CR.width,CR.height).data,counts=new Array(pal.length).fill(0);let total=0;for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;total++;const p=[d[i],d[i+1],d[i+2]];let b=0,bd=1e9;for(let j=0;j<pal.length;j++){const dd=cdist(p,pal[j]);if(dd<bd){bd=dd;b=j;}}counts[b]++;}return{counts,total};}
 function replacePxColor(old,nw,canvas){
-  canvas=canvas||CR;const ctx=canvas.getContext('2d'),id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data,tol=6;
+  canvas=canvas||CR;const ctx=canvas.getContext('2d'),id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data,tol=0;
   for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;if(Math.abs(d[i]-old[0])<=tol&&Math.abs(d[i+1]-old[1])<=tol&&Math.abs(d[i+2]-old[2])<=tol){d[i]=nw[0];d[i+1]=nw[1];d[i+2]=nw[2];}}
   ctx.putImageData(id,0,0);
 }
@@ -611,7 +611,7 @@ function floodFill(px,py,fillRgb,canvas){
   canvas=canvas||CR;const ctx=canvas.getContext('2d'),id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data,w=canvas.width,h=canvas.height;
   const idx=(py*w+px)*4,tr=d[idx],tg=d[idx+1],tb=d[idx+2],[fr,fg,fb]=fillRgb;
   if(tr===fr&&tg===fg&&tb===fb)return;
-  const tol=6,visited=new Uint8Array(w*h),stack=[py*w+px];
+  const tol=0,visited=new Uint8Array(w*h),stack=[py*w+px];
   while(stack.length){const pos=stack.pop();if(visited[pos])continue;const x=pos%w,y=Math.floor(pos/w);if(x<0||x>=w||y<0||y>=h)continue;const i=pos*4;if(Math.abs(d[i]-tr)>tol||Math.abs(d[i+1]-tg)>tol||Math.abs(d[i+2]-tb)>tol)continue;visited[pos]=1;d[i]=fr;d[i+1]=fg;d[i+2]=fb;if(x+1<w)stack.push(pos+1);if(x-1>=0)stack.push(pos-1);if(y+1<h)stack.push(pos+w);if(y-1>=0)stack.push(pos-w);}
   ctx.putImageData(id,0,0);
 }
@@ -1110,7 +1110,7 @@ function renderSampled(){
 }
 
 /*━━ PALETTE STRIP ━━*/
-function colorsMatch(a,b,tol=6){return Math.abs(a[0]-b[0])<=tol&&Math.abs(a[1]-b[1])<=tol&&Math.abs(a[2]-b[2])<=tol;}
+function colorsMatch(a,b,tol=0){return Math.abs(a[0]-b[0])<=tol&&Math.abs(a[1]-b[1])<=tol&&Math.abs(a[2]-b[2])<=tol;}
 function isHlActive(c){return hlColors.some(h=>colorsMatch(h,c));}
 function isColorInLib(hex){
   return library.some(g=>g.colors.some(e=>(e.hex||e).toLowerCase()===hex.toLowerCase()));
@@ -1314,7 +1314,7 @@ function renderHL(){
   const ctx=CH.getContext('2d');
   const src=CR.getContext('2d').getImageData(0,0,cw,ch);
   const d=src.data,out=ctx.createImageData(cw,ch),od=out.data;
-  const tol=10;
+  const tol=0;
   const alpha=Math.round(clamp(hlOpacity,0,100)/100*255);
   for(let i=0;i<d.length;i+=4){
     if(d[i+3]<10)continue;
