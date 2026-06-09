@@ -255,7 +255,7 @@ if(library)libMigrate(library);
 if(!library){library=[];}
 
 /*━━ APP STATE ━━*/
-const CO=$('co'),CR=$('cr'),CH=$('ch');
+const CO=$('co'),CR=$('cr'),CH=$('ch'),CS=$('csel');
 const VP=$('vp'),SSP=$('ssp'),CWRAP=$('cwrap');
 let imgInfo=null,curTab='orig',cntVal='',cntErr='';
 let palette=[],palOrig=[],palPcts=[];
@@ -270,7 +270,10 @@ let hlColors=[]; // array of [r,g,b] — palette multi-selection
 let hlOpacity=80; // % darkness of the non-highlighted overlay
 let hlMode=false; // true = click on swatch activates highlight
 let activeToolColor='#000000'; // shared color for fill/paint/outline tools
-
+let selectionMask=null; // Uint8Array
+let hasSelection=false;
+let floatingSelection=null; // { canvas, x, y }
+let lassoPoints=[];
 function updateActiveToolColor(hex){
   activeToolColor=hex;
   // Update all tool preview swatches
@@ -368,6 +371,9 @@ function updateSize(){
   // CH always matches CR size
   CH.style.width=(cw*zoom)+'px';
   CH.style.height=(ch*zoom)+'px';
+  if(CS){ CS.style.width=(cw*zoom)+'px';
+  CS.style.height=(ch*zoom)+'px';
+  if (typeof drawSelectionOverlay === 'function') drawSelectionOverlay(); }
   if(CH.width!==cw||CH.height!==ch){
     CH.width=cw;CH.height=ch;
     if(hlColors.length)renderHL();
@@ -1020,7 +1026,7 @@ VP.addEventListener('wheel',e=>{
 /*━━ TOOL POPUP SYSTEM ━━*/
 
 // Tool label map
-const TOOL_LABELS={tile:'⊞ Tile',fill:'🪣 Fill',paint:'🖌 Paint',outline:'⬜ Outline',move:'✥ Move'};
+const TOOL_LABELS={tile:'⊞ Tile',fill:'🪣 Fill',paint:'🖌 Paint',outline:'⬜ Outline',magic:'✨ Magic',lasso:'➰ Lasso',move:'✥ Move'};
 
 function openToolPopup(name){
   const popup=$('popup-'+name);
@@ -1057,7 +1063,7 @@ function _returnTpToPopup(name){
 function setActiveTool(name){
   const prev=activeTool;
   activeTool=activeTool===name?null:name;
-  ['tile','fill','paint','outline'].forEach(t=>{
+  ['tile','fill','paint','outline','magic','lasso'].forEach(t=>{
     const el=$('ttab-'+t);if(el)el.classList.toggle('on',activeTool===t);
   });
   $('btn-pan').classList.toggle('on',activeTool==='pan');
@@ -1605,12 +1611,241 @@ function showOlStatus(msg,col){
   setTimeout(()=>el.style.display='none',2800);
 }
 
+/*━━ SELECTION TOOLS (MAGIC WAND & LASSO) ━━*/
+function initSelectionMask() {
+  const w=CR.width, h=CR.height;
+  if (!selectionMask || selectionMask.length !== w*h) selectionMask = new Uint8Array(w*h);
+  else selectionMask.fill(0);
+  hasSelection = false;
+  drawSelectionOverlay();
+}
+
+function drawSelectionOverlay() {
+  if(!CS)return;
+  if (CS.width !== CR.width || CS.height !== CR.height) {
+    CS.width = CR.width; CS.height = CR.height;
+  }
+  const ctx = CS.getContext('2d');
+  ctx.clearRect(0,0,CS.width,CS.height);
+  
+  if (hasSelection && selectionMask) {
+    const id = ctx.createImageData(CS.width, CS.height);
+    const d = id.data;
+    for(let i=0; i<selectionMask.length; i++) {
+      if(selectionMask[i]) {
+        const idx = i*4;
+        d[idx]=0; d[idx+1]=120; d[idx+2]=212; d[idx+3]=100;
+      }
+    }
+    ctx.putImageData(id, 0, 0);
+  }
+  
+  if (lassoPoints && lassoPoints.length > 0) {
+    ctx.strokeStyle = '#0078d4';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+    for(let i=1; i<lassoPoints.length; i++) ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (floatingSelection) {
+    ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y);
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeRect(floatingSelection.x, floatingSelection.y, floatingSelection.canvas.width, floatingSelection.canvas.height);
+    ctx.setLineDash([]);
+  }
+
+  CS.style.width = (CR.width*zoom)+'px';
+  CS.style.height = (CR.height*zoom)+'px';
+  if(curTab==='reduced') CS.style.display='block';
+  else CS.style.display='none';
+}
+
+function doMagicWandAt(e) {
+  const pos = getCanvasPx(e, CR); if (!pos) return;
+  if (!e.shiftKey && !floatingSelection) initSelectionMask();
+  if (floatingSelection) commitFloatingSelection();
+
+  const ctx = CR.getContext('2d'), id = ctx.getImageData(0,0,CR.width,CR.height), d = id.data, w = CR.width, h = CR.height;
+  const idx = (pos.y * w + pos.x) * 4;
+  const tr = d[idx], tg = d[idx+1], tb = d[idx+2];
+  
+  const visited = new Uint8Array(w*h);
+  const stack = [pos.y * w + pos.x];
+  const tol = 0;
+  
+  if (!selectionMask || selectionMask.length !== w*h) selectionMask = new Uint8Array(w*h);
+
+  while(stack.length) {
+    const p = stack.pop();
+    if(visited[p]) continue;
+    visited[p] = 1;
+    const x = p % w, y = Math.floor(p / w), i = p * 4;
+    if(Math.abs(d[i]-tr)<=tol && Math.abs(d[i+1]-tg)<=tol && Math.abs(d[i+2]-tb)<=tol) {
+      selectionMask[p] = 1;
+      hasSelection = true;
+      if(x+1<w && !visited[p+1]) stack.push(p+1);
+      if(x-1>=0 && !visited[p-1]) stack.push(p-1);
+      if(y+1<h && !visited[p+w]) stack.push(p+w);
+      if(y-1>=0 && !visited[p-w]) stack.push(p-w);
+    }
+  }
+  drawSelectionOverlay();
+}
+
+let isLassoing = false;
+VP.addEventListener('mousedown', e => {
+  if (activeTool === 'lasso' && curTab === 'reduced' && e.button === 0) {
+    if (!e.shiftKey && !floatingSelection) initSelectionMask();
+    if (floatingSelection) commitFloatingSelection();
+    const pos = getCanvasPx(e, CR); if (!pos) return;
+    isLassoing = true;
+    lassoPoints = [pos];
+    e.preventDefault(); e.stopPropagation();
+  }
+}, {capture: true});
+window.addEventListener('mousemove', e => {
+  if (isLassoing) {
+    const pos = getCanvasPx(e, CR);
+    if (pos) { lassoPoints.push(pos); drawSelectionOverlay(); }
+  }
+});
+window.addEventListener('mouseup', e => {
+  if (isLassoing) {
+    isLassoing = false;
+    if (lassoPoints.length > 2) {
+      const w = CR.width, h = CR.height;
+      if (!selectionMask || selectionMask.length !== w*h) selectionMask = new Uint8Array(w*h);
+      const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+      const tCtx = tmp.getContext('2d');
+      tCtx.fillStyle = '#fff';
+      tCtx.beginPath();
+      tCtx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+      for(let i=1; i<lassoPoints.length; i++) tCtx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+      tCtx.closePath();
+      tCtx.fill();
+      const td = tCtx.getImageData(0,0,w,h).data;
+      for(let i=0; i<td.length; i+=4) {
+        if (td[i] > 128) { selectionMask[i/4] = 1; hasSelection = true; }
+      }
+    }
+    lassoPoints = [];
+    drawSelectionOverlay();
+  }
+});
+
+let isSelectionMoving = false, moveStartX = 0, moveStartY = 0;
+VP.addEventListener('mousedown', e => {
+  if (activeTool === 'move' && curTab === 'reduced' && e.button === 0) {
+    const pos = getCanvasPx(e, CR); if (!pos) return;
+    if (hasSelection && !floatingSelection) {
+      if (selectionMask[pos.y * CR.width + pos.x] === 1) {
+        extractSelectionToFloat(!e.altKey);
+      } else {
+        initSelectionMask(); return;
+      }
+    }
+    if (floatingSelection) {
+      if (pos.x >= floatingSelection.x && pos.x <= floatingSelection.x + floatingSelection.canvas.width &&
+          pos.y >= floatingSelection.y && pos.y <= floatingSelection.y + floatingSelection.canvas.height) {
+        isSelectionMoving = true;
+        moveStartX = pos.x - floatingSelection.x;
+        moveStartY = pos.y - floatingSelection.y;
+        e.preventDefault(); e.stopPropagation();
+      } else {
+        commitFloatingSelection();
+      }
+    }
+  }
+}, {capture: true});
+window.addEventListener('mousemove', e => {
+  if (isSelectionMoving && floatingSelection) {
+    const pos = getCanvasPx(e, CR) || { x: 0, y: 0 };
+    floatingSelection.x = pos.x - moveStartX;
+    floatingSelection.y = pos.y - moveStartY;
+    drawSelectionOverlay();
+  }
+});
+window.addEventListener('mouseup', e => {
+  if (isSelectionMoving) isSelectionMoving = false;
+});
+window.addEventListener('keydown', e => {
+  if ((e.key === 'Escape' || e.key === 'Enter') && floatingSelection) {
+    commitFloatingSelection();
+  } else if (e.key === 'Escape' && hasSelection) {
+    initSelectionMask();
+  }
+});
+
+function extractSelectionToFloat(cut) {
+  if (!hasSelection || !selectionMask) return;
+  const w = CR.width, h = CR.height;
+  let minX=w, minY=h, maxX=0, maxY=0;
+  for(let y=0;y<h;y++) {
+    for(let x=0;x<w;x++) {
+      if(selectionMask[y*w+x]) {
+        if(x<minX) minX=x; if(x>maxX) maxX=x;
+        if(y<minY) minY=y; if(y>maxY) maxY=y;
+      }
+    }
+  }
+  const fw = maxX - minX + 1, fh = maxY - minY + 1;
+  if(fw<=0 || fh<=0) return;
+  
+  const ctx = CR.getContext('2d');
+  const src = ctx.getImageData(0,0,w,h);
+  
+  const fcv = document.createElement('canvas'); fcv.width = fw; fcv.height = fh;
+  const fCtx = fcv.getContext('2d');
+  const fd = fCtx.createImageData(fw, fh);
+  
+  if (cut) pushUndo();
+  
+  for(let y=0;y<h;y++) {
+    for(let x=0;x<w;x++) {
+      const idx = y*w+x;
+      if (selectionMask[idx]) {
+        const sx = idx*4;
+        const fx = ((y-minY)*fw + (x-minX))*4;
+        fd.data[fx]=src.data[sx]; fd.data[fx+1]=src.data[sx+1]; fd.data[fx+2]=src.data[sx+2]; fd.data[fx+3]=255;
+        if (cut) {
+          src.data[sx]=255; src.data[sx+1]=255; src.data[sx+2]=255; src.data[sx+3]=255;
+        }
+      }
+    }
+  }
+  
+  fCtx.putImageData(fd, 0, 0);
+  if (cut) ctx.putImageData(src, 0, 0);
+  
+  floatingSelection = { canvas: fcv, x: minX, y: minY };
+  hasSelection = false;
+  drawSelectionOverlay();
+}
+
+function commitFloatingSelection() {
+  if (!floatingSelection) return;
+  pushUndo();
+  const ctx = CR.getContext('2d');
+  ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y);
+  floatingSelection = null;
+  drawSelectionOverlay();
+  if(hlColors.length)renderHL();
+  if(typeof updatePaletteAfterFill === "function") updatePaletteAfterFill();
+}
+
 /*━━ VP CLICK ━━*/
 VP.onclick=e=>{
   if(_panActive||_mvMoved||_paintDown)return;
   if(pickerOn){pickAt(e,true);}
   else if(activeTool==='fill')doFill(e);
   else if(activeTool==='outline')doOutlineAt(e);
+  else if(activeTool==='magic')doMagicWandAt(e);
 };
 VP.onmousemove=e=>{if(pickerOn)pickAt(e,false);};
 VP.onmouseleave=()=>{$('etip').style.display='none';};

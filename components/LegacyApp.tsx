@@ -74,6 +74,8 @@ export default function LegacyApp() {
           </button>
           <button class="ttab" id="ttab-paint" title="Paint">🖌</button>
           <button class="ttab" id="ttab-outline" title="Outline">⬜</button>
+          <button class="ttab" id="ttab-magic" title="Magic Wand">✨</button>
+          <button class="ttab" id="ttab-lasso" title="Lasso Selection">➰</button>
         </div>
       </div>
     </div>
@@ -274,6 +276,7 @@ export default function LegacyApp() {
           <canvas id="co"></canvas>
           <canvas id="cr"></canvas>
           <canvas id="ch"></canvas>
+          <canvas id="csel"></canvas>
           <canvas id="cgrid"></canvas>
         </div>
       </div>
