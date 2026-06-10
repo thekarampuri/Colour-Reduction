@@ -1537,21 +1537,30 @@ function updateVpCursor(){
 /*━━ TILING — draws directly into CR ━━*/
 function updateTileInfo(){
   if(!imgInfo||!reducedData)return;
-  const rx=clamp(parseInt(\$('tile-x').value)||1,1,16);
-  const ry=clamp(parseInt(\$('tile-y').value)||1,1,16);
-  if(rx===1&&ry===1)\$('tile-info').textContent='';
-  else \$('tile-info').textContent=\`\${reducedW*rx} × \${reducedH*ry} px (\${rx}×\${ry})\`;
+  const rx=clamp(parseInt($('tile-x').value)||1,1,16);
+  const ry=clamp(parseInt($('tile-y').value)||1,1,16);
+  if(rx===1&&ry===1)$('tile-info').textContent='';
+  else $('tile-info').textContent=`${reducedW*rx} × ${reducedH*ry} px (${rx}×${ry})`;
 }
 function liveApplyTile(){
   if(!imgInfo||!reducedData)return;
-  const rx=clamp(parseInt(\$('tile-x').value)||1,1,16);
-  const ry=clamp(parseInt(\$('tile-y').value)||1,1,16);
+  const rx=clamp(parseInt($('tile-x').value)||1,1,16);
+  const ry=clamp(parseInt($('tile-y').value)||1,1,16);
+
+  if (!tileActive) {
+      reducedData = CR.getContext('2d').getImageData(0,0,CR.width,CR.height);
+      reducedW = CR.width;
+      reducedH = CR.height;
+  } else {
+      reducedData = CR.getContext('2d').getImageData(0,0,reducedW,reducedH);
+  }
+
   if(rx===1&&ry===1){
     // reset back to single image
     tileActive=false;
     CR.width=reducedW;CR.height=reducedH;
     CR.getContext('2d').putImageData(reducedData,0,0);
-    \$('tile-badge').classList.remove('on');
+    $('tile-badge').classList.remove('on');
     updateSize();return;
   }
   // Tile directly into CR
@@ -1565,8 +1574,8 @@ function liveApplyTile(){
     for(let tx=0;tx<rx;tx++)
       ctx.drawImage(tmp,tx*reducedW,ty*reducedH);
   tileActive=true;
-  \$('tile-badge-txt').textContent=\`⊞ \${rx}×\${ry}\`;
-  \$('tile-badge').classList.add('on');
+  $('tile-badge-txt').textContent=`⊞ ${rx}×${ry}`;
+  $('tile-badge').classList.add('on');
   updateSize();
   if(hlColors.length)renderHL();
   if(curTab==='reduced')requestAnimationFrame(()=>{VP.scrollLeft=0;VP.scrollTop=0;});
