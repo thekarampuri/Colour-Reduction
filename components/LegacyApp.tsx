@@ -903,6 +903,11 @@ function updateSize(){
   // CH always matches CR size
   CH.style.width=(cw*zoom)+'px';
   CH.style.height=(ch*zoom)+'px';
+  if(CS){ 
+    CS.style.width=(cw*zoom)+'px';
+    CS.style.height=(ch*zoom)+'px';
+    if(typeof drawSelectionOverlay === 'function') drawSelectionOverlay();
+  }
   if(CH.width!==cw||CH.height!==ch){
     CH.width=cw;CH.height=ch;
     if(hlColors.length)renderHL();
