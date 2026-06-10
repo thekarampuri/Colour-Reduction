@@ -2867,6 +2867,21 @@ let _mvDragging=false,_mvLX=0,_mvLY=0,_mvMoved=false;
 VP.addEventListener('mousedown',e=>{
   if(!imgInfo)return;
   if(e.button===1||e.button===2){
+    if (e.button===2 && typeof floatingSelection !== 'undefined' && floatingSelection) {
+      const can = curTab === 'orig' ? CO : CR;
+      const rect = can.getBoundingClientRect();
+      const sx = can.width / rect.width, sy = can.height / rect.height;
+      const cx = Math.floor((e.clientX - rect.left) * sx);
+      const cy = Math.floor((e.clientY - rect.top) * sy);
+      if (cx >= floatingSelection.x && cx < floatingSelection.x + floatingSelection.canvas.width &&
+          cy >= floatingSelection.y && cy < floatingSelection.y + floatingSelection.canvas.height) {
+          const fctx = floatingSelection.canvas.getContext('2d');
+          const lx = cx - floatingSelection.x;
+          const ly = cy - floatingSelection.y;
+          const pxData = fctx.getImageData(lx, ly, 1, 1).data;
+          if (pxData[3] > 10) return; // let contextmenu handle it
+      }
+    }
     _mvDragging=true;_mvMoved=true;
     _mvLX=e.clientX;_mvLY=e.clientY;
     VP.classList.add('move-dragging');
@@ -2874,7 +2889,106 @@ VP.addEventListener('mousedown',e=>{
   }
 },{capture:true,passive:false});
 
-VP.addEventListener('contextmenu',e=>{if(_mvMoved)e.preventDefault();});
+VP.addEventListener('contextmenu',e=>{
+  if(_mvMoved){ e.preventDefault(); return; }
+  if (typeof floatingSelection !== 'undefined' && floatingSelection && imgInfo) {
+    const can = curTab === 'orig' ? CO : CR;
+    const rect = can.getBoundingClientRect();
+    const sx = can.width / rect.width, sy = can.height / rect.height;
+    const cx = Math.floor((e.clientX - rect.left) * sx);
+    const cy = Math.floor((e.clientY - rect.top) * sy);
+    if (cx >= floatingSelection.x && cx < floatingSelection.x + floatingSelection.canvas.width &&
+        cy >= floatingSelection.y && cy < floatingSelection.y + floatingSelection.canvas.height) {
+        const fctx = floatingSelection.canvas.getContext('2d');
+        const lx = cx - floatingSelection.x;
+        const ly = cy - floatingSelection.y;
+        const pxData = fctx.getImageData(lx, ly, 1, 1).data;
+        if (pxData[3] > 10) {
+            e.preventDefault();
+            showHideObjectContextMenu(e.clientX, e.clientY, lx, ly);
+            return;
+        }
+    }
+  }
+});
+
+function showHideObjectContextMenu(clientX, clientY, lx, ly) {
+  let ctxMenu = document.getElementById('fs-ctx-menu');
+  if (!ctxMenu) {
+      ctxMenu = document.createElement('div');
+      ctxMenu.id = 'fs-ctx-menu';
+      ctxMenu.style.position = 'fixed';
+      ctxMenu.style.zIndex = '10000';
+      ctxMenu.style.background = '#fff';
+      ctxMenu.style.border = '1px solid #b8b8b8';
+      ctxMenu.style.boxShadow = '0 4px 16px rgba(0,0,0,.18)';
+      ctxMenu.style.padding = '4px 0';
+      ctxMenu.style.borderRadius = '3px';
+      ctxMenu.style.fontSize = '12px';
+      ctxMenu.style.cursor = 'pointer';
+      
+      const hideItem = document.createElement('div');
+      hideItem.textContent = 'Hide It';
+      hideItem.style.padding = '6px 16px';
+      hideItem.onmouseover = () => hideItem.style.background = '#e5f1fb';
+      hideItem.onmouseout = () => hideItem.style.background = '#fff';
+      hideItem.onclick = () => {
+          hideFloatingObject(ctxMenu._lx, ctxMenu._ly);
+          ctxMenu.style.display = 'none';
+      };
+      ctxMenu.appendChild(hideItem);
+      document.body.appendChild(ctxMenu);
+      
+      document.addEventListener('mousedown', e => {
+          if (!ctxMenu.contains(e.target)) ctxMenu.style.display = 'none';
+      });
+  }
+  ctxMenu._lx = lx;
+  ctxMenu._ly = ly;
+  ctxMenu.style.left = clientX + 'px';
+  ctxMenu.style.top = clientY + 'px';
+  ctxMenu.style.display = 'block';
+}
+
+function hideFloatingObject(lx, ly) {
+  if (typeof floatingSelection === 'undefined' || !floatingSelection) return;
+  const fw = floatingSelection.canvas.width;
+  const fh = floatingSelection.canvas.height;
+  const fctx = floatingSelection.canvas.getContext('2d');
+  const imgData = fctx.getImageData(0, 0, fw, fh);
+  const data = imgData.data;
+  
+  const targetPxIdx = (ly * fw + lx) * 4;
+  if (data[targetPxIdx+3] < 10) return; 
+  
+  const visited = new Uint8Array(fw * fh);
+  const stack = [[lx, ly]];
+  visited[ly * fw + lx] = 1;
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+  
+  while (stack.length) {
+      const [x, y] = stack.pop();
+      const idx = (y * fw + x) * 4;
+      
+      data[idx] = 0; data[idx+1] = 0; data[idx+2] = 0; data[idx+3] = 0;
+      
+      for (const [dx, dy] of dirs) {
+          const nx = x + dx, ny = y + dy;
+          if (nx >= 0 && nx < fw && ny >= 0 && ny < fh) {
+              const ni = ny * fw + nx;
+              if (!visited[ni]) {
+                  const nidx = ni * 4;
+                  if (data[nidx+3] > 10) {
+                      visited[ni] = 1;
+                      stack.push([nx, ny]);
+                  }
+              }
+          }
+      }
+  }
+  fctx.putImageData(imgData, 0, 0);
+  if(typeof drawSelectionOverlay === 'function') drawSelectionOverlay();
+}
 
 window.addEventListener('mousemove',e=>{
   if(!_mvDragging)return;
