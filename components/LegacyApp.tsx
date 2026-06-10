@@ -226,6 +226,21 @@ export default function LegacyApp() {
   </div>
 </div>
 
+<div class="tool-popup" id="popup-magic">
+  <div class="tool-popup-hdr" id="popup-magic-hdr">
+    <span>✨ Magic Wand</span>
+    <button class="tool-popup-close" onclick="closeToolPopup('magic')">✕</button>
+  </div>
+  <div class="tool-popup-body">
+    <div class="tp" id="tp-magic">
+      <div class="fill-modes">
+        <button class="fmode on" id="mmode-single">Single</button>
+        <button class="fmode" id="mmode-similar">Similar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="tool-popup" id="popup-move">
   <div class="tool-popup-hdr" id="popup-move-hdr">
     <span>✥ Move</span>
@@ -610,6 +625,8 @@ function replacePxColor(old,nw,canvas){
   for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;if(Math.abs(d[i]-old[0])<=tol&&Math.abs(d[i+1]-old[1])<=tol&&Math.abs(d[i+2]-old[2])<=tol){d[i]=nw[0];d[i+1]=nw[1];d[i+2]=nw[2];}}
   ctx.putImageData(id,0,0);
 }
+
+
 function floodFill(px,py,fillRgb,canvas){
   canvas=canvas||CR;const ctx=canvas.getContext('2d'),id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data,w=canvas.width,h=canvas.height;
   const idx=(py*w+px)*4,tr=d[idx],tg=d[idx+1],tb=d[idx+2],[fr,fg,fb]=fillRgb;
@@ -1604,6 +1621,10 @@ function onTileInput(){
 /*━━ MAGIC FILL ━━*/
 \$('fmode-single').onclick=()=>{fillMode='single';\$('fmode-single').classList.add('on');\$('fmode-similar').classList.remove('on');};
 \$('fmode-similar').onclick=()=>{fillMode='similar';\$('fmode-similar').classList.add('on');\$('fmode-single').classList.remove('on');};
+
+let magicMode='single';
+\$('mmode-single').onclick=()=>{magicMode='single';\$('mmode-single').classList.add('on');\$('mmode-similar').classList.remove('on');};
+\$('mmode-similar').onclick=()=>{magicMode='similar';\$('mmode-similar').classList.add('on');\$('mmode-single').classList.remove('on');};
 
 // Helper: set fill color
 function setFillColor(hex){updateActiveToolColor(hex);}

@@ -1366,6 +1366,21 @@ body.activation-locked #app{pointer-events:none;filter:blur(1px);}
   </div>
 </div>
 
+<div class="tool-popup" id="popup-magic">
+  <div class="tool-popup-hdr" id="popup-magic-hdr">
+    <span>✨ Magic Wand</span>
+    <button class="tool-popup-close" onclick="closeToolPopup('magic')">✕</button>
+  </div>
+  <div class="tool-popup-body">
+    <div class="tp" id="tp-magic">
+      <div class="fill-modes">
+        <button class="fmode on" id="mmode-single">Single</button>
+        <button class="fmode" id="mmode-similar">Similar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="tool-popup" id="popup-move">
   <div class="tool-popup-hdr" id="popup-move-hdr">
     <span>✥ Move</span>
@@ -2819,6 +2834,10 @@ $('tile-badge-rst').onclick=resetTile;
 /*━━ MAGIC FILL ━━*/
 $('fmode-single').onclick=()=>{fillMode='single';$('fmode-single').classList.add('on');$('fmode-similar').classList.remove('on');};
 $('fmode-similar').onclick=()=>{fillMode='similar';$('fmode-similar').classList.add('on');$('fmode-single').classList.remove('on');};
+
+let magicMode='single';
+$('mmode-single').onclick=()=>{magicMode='single';$('mmode-single').classList.add('on');$('mmode-similar').classList.remove('on');};
+$('mmode-similar').onclick=()=>{magicMode='similar';$('mmode-similar').classList.add('on');$('mmode-single').classList.remove('on');};
 
 // Helper: set fill color
 function setFillColor(hex){updateActiveToolColor(hex);}
@@ -4332,22 +4351,32 @@ function doMagicWandAt(e){
   const idx=(pos.y*w+pos.x)*4;
   const tr=d[idx],tg=d[idx+1],tb=d[idx+2];
 
-  // Flood fill from click point — contiguous region only (connected pixels of same color)
-  const visited=new Uint8Array(w*h);
-  const startP=pos.y*w+pos.x;
-  // Don't revisit already-selected pixels (prevents re-walking same region)
-  for(let i=0;i<w*h;i++){if(selectionMask[i])visited[i]=1;}
-  const stack=[startP];
-  visited[startP]=1;
-  while(stack.length){
-    const p=stack.pop();
-    const x=p%w,y=Math.floor(p/w),i=p*4;
-    if(d[i]===tr&&d[i+1]===tg&&d[i+2]===tb){
-      selectionMask[p]=1;hasSelection=true;
-      if(x+1<w&&!visited[p+1]){visited[p+1]=1;stack.push(p+1);}
-      if(x-1>=0&&!visited[p-1]){visited[p-1]=1;stack.push(p-1);}
-      if(y+1<h&&!visited[p+w]){visited[p+w]=1;stack.push(p+w);}
-      if(y-1>=0&&!visited[p-w]){visited[p-w]=1;stack.push(p-w);}
+  if (magicMode === 'similar') {
+    for (let i = 0; i < w * h; i++) {
+      const p = i * 4;
+      if (d[p] === tr && d[p+1] === tg && d[p+2] === tb && d[p+3] > 10) {
+        selectionMask[i] = 1;
+        hasSelection = true;
+      }
+    }
+  } else {
+    // Flood fill from click point — contiguous region only (connected pixels of same color)
+    const visited=new Uint8Array(w*h);
+    const startP=pos.y*w+pos.x;
+    // Don't revisit already-selected pixels (prevents re-walking same region)
+    for(let i=0;i<w*h;i++){if(selectionMask[i])visited[i]=1;}
+    const stack=[startP];
+    visited[startP]=1;
+    while(stack.length){
+      const p=stack.pop();
+      const x=p%w,y=Math.floor(p/w),i=p*4;
+      if(d[i]===tr&&d[i+1]===tg&&d[i+2]===tb&&d[i+3]>10){
+        selectionMask[p]=1;hasSelection=true;
+        if(x+1<w&&!visited[p+1]){visited[p+1]=1;stack.push(p+1);}
+        if(x-1>=0&&!visited[p-1]){visited[p-1]=1;stack.push(p-1);}
+        if(y+1<h&&!visited[p+w]){visited[p+w]=1;stack.push(p+w);}
+        if(y-1>=0&&!visited[p-w]){visited[p-w]=1;stack.push(p-w);}
+      }
     }
   }
   drawSelectionOverlay();
