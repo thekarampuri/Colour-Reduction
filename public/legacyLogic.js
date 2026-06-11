@@ -1741,8 +1741,7 @@ function applyOutline(srcRgb, connectedMask=null, skipPush=false){
     const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;
   }
   if(!skipPush)pushUndo();
-  ctx.putImageData(new ImageData(out,w,h),0,0);
-  if(!skipPush){if(hlColors.length)renderHL();showOlStatus('✓ '+count.toLocaleString()+' px outlined','#388e3c');}
+if(!skipPush){if(hlColors.length)renderHL();showOlStatus('✓ '+count.toLocaleString()+' px outlined','#388e3c');}
 }
 
 function showOlStatus(msg,col){
@@ -1750,77 +1749,135 @@ function showOlStatus(msg,col){
   setTimeout(()=>el.style.display='none',2800);
 }
 
-/*━━ SELECTION TOOLS (MAGIC WAND & LASSO) ━━*/
-function initSelectionMask() {
-  const w=CR.width, h=CR.height;
-  if (!selectionMask || selectionMask.length !== w*h) selectionMask = new Uint8Array(w*h);
-  else selectionMask.fill(0);
-  hasSelection = false;
-  drawSelectionOverlay();
+function getSelectionPaths(mask, w, h) {
+  const edges = new Map();
+  const W = w + 1;
+  function addEdge(x1, y1, x2, y2) {
+    const key = y1 * W + x1;
+    let list = edges.get(key);
+    if (!list) { list = []; edges.set(key, list); }
+    list.push({x: x2, y: y2});
+  }
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (mask[y*w + x]) {
+        if (y === 0 || !mask[(y-1)*w + x]) addEdge(x, y, x+1, y);
+        if (x === w-1 || !mask[y*w + (x+1)]) addEdge(x+1, y, x+1, y+1);
+        if (y === h-1 || !mask[(y+1)*w + x]) addEdge(x+1, y+1, x, y+1);
+        if (x === 0 || !mask[y*w + (x-1)]) addEdge(x, y+1, x, y);
+      }
+    }
+  }
+
+  const paths = [];
+  while (edges.size > 0) {
+    const startKey = edges.keys().next().value;
+    const sx = startKey % W;
+    const sy = Math.floor(startKey / W);
+    const path = [{x: sx, y: sy}];
+    let currKey = startKey;
+    while (true) {
+      const neighbors = edges.get(currKey);
+      if (!neighbors || neighbors.length === 0) {
+        edges.delete(currKey);
+        break;
+      }
+      const next = neighbors.pop();
+      if (neighbors.length === 0) edges.delete(currKey);
+      path.push(next);
+      currKey = next.y * W + next.x;
+      if (currKey === startKey) break;
+    }
+    paths.push(path);
+  }
+  return paths;
 }
 
-function drawSelectionOverlay() {
+function drawSelectionOverlay(){
   if(!CS)return;
-  if (CS.width !== CR.width || CS.height !== CR.height) {
-    CS.width = CR.width; CS.height = CR.height;
+  const cw = CR.width;
+  const ch = CR.height;
+  const dpr = window.devicePixelRatio || 1;
+  const pw = Math.round(cw * zoom * dpr);
+  const ph = Math.round(ch * zoom * dpr);
+  
+  if(CS.width !== pw || CS.height !== ph) {
+    CS.width = pw;
+    CS.height = ph;
   }
+  
   const ctx = CS.getContext('2d');
   ctx.clearRect(0,0,CS.width,CS.height);
   
-  // Draw selection mask as dashed white and gray border (marching ants)
-  if (hasSelection && selectionMask) {
-    const id = ctx.createImageData(CS.width, CS.height);
-    const d = id.data;
-    const w = CS.width, h = CS.height;
-    for(let y=0; y<h; y++) {
-      for(let x=0; x<w; x++) {
-        const i = y*w+x;
-        if(selectionMask[i]) {
-          // Check if boundary
-          const isTop = y===0 || !selectionMask[i-w];
-          const isBottom = y===h-1 || !selectionMask[i+w];
-          const isLeft = x===0 || !selectionMask[i-1];
-          const isRight = x===w-1 || !selectionMask[i+1];
-          
-          if(isTop || isBottom || isLeft || isRight){
-            const idx = i*4;
-            // Alternating pattern: dashed gray white line
-            if (((x + y) % 8) < 4) {
-               d[idx]=255; d[idx+1]=255; d[idx+2]=255; d[idx+3]=255; // White
-            } else {
-               d[idx]=100; d[idx+1]=100; d[idx+2]=100; d[idx+3]=255; // Gray
-            }
-          }
-        }
+  ctx.save();
+  ctx.scale(zoom * dpr, zoom * dpr);
+
+  const lw = 1 / (zoom * dpr);
+  const dash = 4 / (zoom * dpr);
+
+  // Draw selection mask as MS Paint marching ants
+  if(hasSelection&&selectionMask){
+    const paths = getSelectionPaths(selectionMask, cw, ch);
+    ctx.beginPath();
+    for (const p of paths) {
+      if (p.length === 0) continue;
+      ctx.moveTo(p[0].x, p[0].y);
+      for (let i = 1; i < p.length; i++) {
+        ctx.lineTo(p[i].x, p[i].y);
       }
     }
-    ctx.putImageData(id, 0, 0);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = lw;
+    ctx.setLineDash([]);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#000000';
+    ctx.setLineDash([dash, dash]);
+    ctx.stroke();
   }
-  
-  if (lassoPoints && lassoPoints.length > 0) {
-    ctx.strokeStyle = '#0078d4';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
+
+  // Draw live lasso path
+  if(typeof lassoPoints !== 'undefined' && lassoPoints&&lassoPoints.length>1){
     ctx.beginPath();
     ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
-    for(let i=1; i<lassoPoints.length; i++) ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+    for(let i=1;i<lassoPoints.length;i++) ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+    
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = lw;
+    ctx.setLineDash([]);
     ctx.stroke();
-    ctx.setLineDash([]);
+
+    ctx.strokeStyle = '#000000';
+    ctx.setLineDash([dash, dash]);
+    ctx.stroke();
   }
 
-  if (floatingSelection) {
+  // Draw floating selection
+  if(typeof floatingSelection !== 'undefined' && floatingSelection){
+    ctx.imageSmoothingEnabled = false;
     ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y);
-    ctx.strokeStyle = '#ff0000';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
-    ctx.strokeRect(floatingSelection.x, floatingSelection.y, floatingSelection.canvas.width, floatingSelection.canvas.height);
+    
+    ctx.beginPath();
+    ctx.rect(floatingSelection.x, floatingSelection.y, floatingSelection.canvas.width, floatingSelection.canvas.height);
+    
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = lw;
     ctx.setLineDash([]);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#000000';
+    ctx.setLineDash([dash, dash]);
+    ctx.stroke();
   }
 
-  CS.style.width = (CR.width*zoom)+'px';
-  CS.style.height = (CR.height*zoom)+'px';
-  if(curTab==='reduced') CS.style.display='block';
-  else CS.style.display='none';
+  ctx.restore();
+
+  CS.style.width = (cw * zoom) + 'px';
+  CS.style.height = (ch * zoom) + 'px';
+  if(typeof curTab !== 'undefined') {
+    CS.style.display = (curTab === 'reduced') ? 'block' : 'none';
+  }
 }
 
 function doMagicWandAt(e) {

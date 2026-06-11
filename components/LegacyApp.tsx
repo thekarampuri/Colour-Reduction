@@ -702,7 +702,134 @@ function libSaveFile(){
   libShowStatus('Saved ✓','ok');
 }
 // Load → replaces current library entirely
-function libLoadFile(file,merge){
+function getSelectionPaths(mask, w, h) {
+  const edges = new Map();
+  const W = w + 1;
+  function addEdge(x1, y1, x2, y2) {
+    const key = y1 * W + x1;
+    let list = edges.get(key);
+    if (!list) { list = []; edges.set(key, list); }
+    list.push({x: x2, y: y2});
+  }
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (mask[y*w + x]) {
+        if (y === 0 || !mask[(y-1)*w + x]) addEdge(x, y, x+1, y);
+        if (x === w-1 || !mask[y*w + (x+1)]) addEdge(x+1, y, x+1, y+1);
+        if (y === h-1 || !mask[(y+1)*w + x]) addEdge(x+1, y+1, x, y+1);
+        if (x === 0 || !mask[y*w + (x-1)]) addEdge(x, y+1, x, y);
+      }
+    }
+  }
+
+  const paths = [];
+  while (edges.size > 0) {
+    const startKey = edges.keys().next().value;
+    const sx = startKey % W;
+    const sy = Math.floor(startKey / W);
+    const path = [{x: sx, y: sy}];
+    let currKey = startKey;
+    while (true) {
+      const neighbors = edges.get(currKey);
+      if (!neighbors || neighbors.length === 0) {
+        edges.delete(currKey);
+        break;
+      }
+      const next = neighbors.pop();
+      if (neighbors.length === 0) edges.delete(currKey);
+      path.push(next);
+      currKey = next.y * W + next.x;
+      if (currKey === startKey) break;
+    }
+    paths.push(path);
+  }
+  return paths;
+}
+
+function drawSelectionOverlay(){
+  if(!CS)return;
+  const cw = CR.width;
+  const ch = CR.height;
+  const dpr = window.devicePixelRatio || 1;
+  const pw = Math.round(cw * zoom * dpr);
+  const ph = Math.round(ch * zoom * dpr);
+  
+  if(CS.width !== pw || CS.height !== ph) {
+    CS.width = pw;
+    CS.height = ph;
+  }
+  
+  const ctx = CS.getContext('2d');
+  ctx.clearRect(0,0,CS.width,CS.height);
+  
+  ctx.save();
+  ctx.scale(zoom * dpr, zoom * dpr);
+
+  const lw = 1 / (zoom * dpr);
+  const dash = 4 / (zoom * dpr);
+
+  // Draw selection mask as MS Paint marching ants
+  if(hasSelection&&selectionMask){
+    const paths = getSelectionPaths(selectionMask, cw, ch);
+    ctx.beginPath();
+    for (const p of paths) {
+      if (p.length === 0) continue;
+      ctx.moveTo(p[0].x, p[0].y);
+      for (let i = 1; i < p.length; i++) {
+        ctx.lineTo(p[i].x, p[i].y);
+      }
+    }
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = lw;
+    ctx.setLineDash([]);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#000000';
+    ctx.setLineDash([dash, dash]);
+    ctx.stroke();
+  }
+
+  // Draw live lasso path
+  if(lassoPoints&&lassoPoints.length>1){
+    ctx.beginPath();
+    ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+    for(let i=1;i<lassoPoints.length;i++) ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+    
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = lw;
+    ctx.setLineDash([]);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#000000';
+    ctx.setLineDash([dash, dash]);
+    ctx.stroke();
+  }
+
+  // Draw floating selection
+  if(floatingSelection){
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y);
+    
+    ctx.beginPath();
+    ctx.rect(floatingSelection.x, floatingSelection.y, floatingSelection.canvas.width, floatingSelection.canvas.height);
+    
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = lw;
+    ctx.setLineDash([]);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#000000';
+    ctx.setLineDash([dash, dash]);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  CS.style.width = (cw * zoom) + 'px';
+  CS.style.height = (ch * zoom) + 'px';
+  CS.style.display = (curTab === 'reduced') ? 'block' : 'none';
+}  function libLoadFile(file,merge){
   if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
