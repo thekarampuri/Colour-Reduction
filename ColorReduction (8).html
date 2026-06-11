@@ -3000,6 +3000,10 @@ function hideFloatingObject(lx, ly) {
   
   const targetPxIdx = (ly * fw + lx) * 4;
   if (data[targetPxIdx+3] < 10) return; 
+
+  const tr = data[targetPxIdx];
+  const tg = data[targetPxIdx+1];
+  const tb = data[targetPxIdx+2];
   
   const visited = new Uint8Array(fw * fh);
   const stack = [[lx, ly]];
@@ -3018,7 +3022,7 @@ function hideFloatingObject(lx, ly) {
               const ni = ny * fw + nx;
               if (!visited[ni]) {
                   const nidx = ni * 4;
-                  if (data[nidx+3] > 10) {
+                  if (data[nidx+3] > 10 && data[nidx] === tr && data[nidx+1] === tg && data[nidx+2] === tb) {
                       visited[ni] = 1;
                       stack.push([nx, ny]);
                   }
