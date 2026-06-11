@@ -809,10 +809,10 @@ function drawSelectionOverlay(){
   // Draw floating selection
   if(floatingSelection){
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y);
+    ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y, floatingSelection.w, floatingSelection.h);
     
     ctx.beginPath();
-    ctx.rect(floatingSelection.x, floatingSelection.y, floatingSelection.canvas.width, floatingSelection.canvas.height);
+    ctx.rect(floatingSelection.x, floatingSelection.y, floatingSelection.w, floatingSelection.h);
     
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = lw;
@@ -822,6 +822,24 @@ function drawSelectionOverlay(){
     ctx.strokeStyle = '#000000';
     ctx.setLineDash([dash, dash]);
     ctx.stroke();
+
+    // Draw resize handles (4 corners)
+    const hs = 6 / (zoom * dpr);
+    const hhs = hs / 2;
+    const corners = [
+      {x: floatingSelection.x, y: floatingSelection.y},
+      {x: floatingSelection.x + floatingSelection.w, y: floatingSelection.y},
+      {x: floatingSelection.x, y: floatingSelection.y + floatingSelection.h},
+      {x: floatingSelection.x + floatingSelection.w, y: floatingSelection.y + floatingSelection.h}
+    ];
+
+    ctx.fillStyle = '#ffffff';
+    ctx.setLineDash([]);
+    ctx.lineWidth = lw;
+    for (let c of corners) {
+      ctx.fillRect(c.x - hhs, c.y - hhs, hs, hs);
+      ctx.strokeRect(c.x - hhs, c.y - hhs, hs, hs);
+    }
   }
 
   ctx.restore();

@@ -4402,10 +4402,10 @@ function drawSelectionOverlay(){
   // Draw floating selection
   if(floatingSelection){
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y);
+    ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y, floatingSelection.w, floatingSelection.h);
     
     ctx.beginPath();
-    ctx.rect(floatingSelection.x, floatingSelection.y, floatingSelection.canvas.width, floatingSelection.canvas.height);
+    ctx.rect(floatingSelection.x, floatingSelection.y, floatingSelection.w, floatingSelection.h);
     
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = lw;
@@ -4415,6 +4415,24 @@ function drawSelectionOverlay(){
     ctx.strokeStyle = '#000000';
     ctx.setLineDash([dash, dash]);
     ctx.stroke();
+
+    // Draw resize handles (4 corners)
+    const hs = 6 / (zoom * dpr);
+    const hhs = hs / 2;
+    const corners = [
+      {x: floatingSelection.x, y: floatingSelection.y},
+      {x: floatingSelection.x + floatingSelection.w, y: floatingSelection.y},
+      {x: floatingSelection.x, y: floatingSelection.y + floatingSelection.h},
+      {x: floatingSelection.x + floatingSelection.w, y: floatingSelection.y + floatingSelection.h}
+    ];
+
+    ctx.fillStyle = '#ffffff';
+    ctx.setLineDash([]);
+    ctx.lineWidth = lw;
+    for (let c of corners) {
+      ctx.fillRect(c.x - hhs, c.y - hhs, hs, hs);
+      ctx.strokeRect(c.x - hhs, c.y - hhs, hs, hs);
+    }
   }
 
   ctx.restore();
@@ -4517,6 +4535,8 @@ window.addEventListener('mouseup',e=>{
 
 // Move selection tool
 let isSelectionMoving=false,moveStartX=0,moveStartY=0;
+let isSelectionResizing=false,resizeCorner='',resizeStartW=0,resizeStartH=0;
+
 VP.addEventListener('mousedown',e=>{
   if(activeTool!=='move'||curTab!=='reduced'||!imgInfo||e.button!==0)return;
   const pos=getCanvasPx(e,CR);if(!pos)return;
@@ -4525,22 +4545,67 @@ VP.addEventListener('mousedown',e=>{
     else{initSelectionMask();return;}
   }
   if(floatingSelection){
-    if(pos.x>=floatingSelection.x&&pos.x<=floatingSelection.x+floatingSelection.canvas.width&&
-       pos.y>=floatingSelection.y&&pos.y<=floatingSelection.y+floatingSelection.canvas.height){
-      isSelectionMoving=true;moveStartX=pos.x-floatingSelection.x;moveStartY=pos.y-floatingSelection.y;
+    const x=floatingSelection.x, y=floatingSelection.y;
+    const w=floatingSelection.w, h=floatingSelection.h;
+    const hs = 6 / zoom; // handle size in image coords
+
+    if (Math.abs(pos.x - x) <= hs && Math.abs(pos.y - y) <= hs) resizeCorner = 'nw';
+    else if (Math.abs(pos.x - (x+w)) <= hs && Math.abs(pos.y - y) <= hs) resizeCorner = 'ne';
+    else if (Math.abs(pos.x - x) <= hs && Math.abs(pos.y - (y+h)) <= hs) resizeCorner = 'sw';
+    else if (Math.abs(pos.x - (x+w)) <= hs && Math.abs(pos.y - (y+h)) <= hs) resizeCorner = 'se';
+
+    if (resizeCorner) {
+      isSelectionResizing = true;
+      moveStartX = pos.x; moveStartY = pos.y;
+      resizeStartW = w; resizeStartH = h;
+      floatingSelection.ox = x; floatingSelection.oy = y;
+      e.preventDefault(); e.stopPropagation(); return;
+    }
+
+    if(pos.x>=x&&pos.x<=x+w&&pos.y>=y&&pos.y<=y+h){
+      isSelectionMoving=true;moveStartX=pos.x-x;moveStartY=pos.y-y;
       e.preventDefault();e.stopPropagation();
     } else {commitFloatingSelection();}
   }
 },{capture:true});
 
 window.addEventListener('mousemove',e=>{
+  if(isSelectionResizing && floatingSelection) {
+    const pos=getCanvasPx(e,CR) || {x: moveStartX, y: moveStartY};
+    const dx = pos.x - moveStartX;
+    const dy = pos.y - moveStartY;
+
+    if (resizeCorner === 'se') {
+      floatingSelection.w = Math.max(1, resizeStartW + dx);
+      floatingSelection.h = Math.max(1, resizeStartH + dy);
+    } else if (resizeCorner === 'sw') {
+      floatingSelection.w = Math.max(1, resizeStartW - dx);
+      floatingSelection.h = Math.max(1, resizeStartH + dy);
+      floatingSelection.x = floatingSelection.ox + resizeStartW - floatingSelection.w;
+    } else if (resizeCorner === 'ne') {
+      floatingSelection.w = Math.max(1, resizeStartW + dx);
+      floatingSelection.h = Math.max(1, resizeStartH - dy);
+      floatingSelection.y = floatingSelection.oy + resizeStartH - floatingSelection.h;
+    } else if (resizeCorner === 'nw') {
+      floatingSelection.w = Math.max(1, resizeStartW - dx);
+      floatingSelection.h = Math.max(1, resizeStartH - dy);
+      floatingSelection.x = floatingSelection.ox + resizeStartW - floatingSelection.w;
+      floatingSelection.y = floatingSelection.oy + resizeStartH - floatingSelection.h;
+    }
+    drawSelectionOverlay();
+    return;
+  }
+
   if(!isSelectionMoving||!floatingSelection)return;
   const pos=getCanvasPx(e,CR)||{x:floatingSelection.x+moveStartX,y:floatingSelection.y+moveStartY};
   floatingSelection.x=pos.x-moveStartX;floatingSelection.y=pos.y-moveStartY;
   drawSelectionOverlay();
 });
 
-window.addEventListener('mouseup',()=>{if(isSelectionMoving)isSelectionMoving=false;});
+window.addEventListener('mouseup',()=>{
+  if(isSelectionMoving)isSelectionMoving=false;
+  if(isSelectionResizing) { isSelectionResizing = false; resizeCorner = ''; }
+});
 
 // Keyboard: Escape = deselect/commit, Enter = commit floating, Ctrl+C = copy, Ctrl+V = paste
 window.addEventListener('keydown',e=>{
@@ -4548,7 +4613,10 @@ window.addEventListener('keydown',e=>{
   if(tag==='INPUT'||tag==='TEXTAREA')return;
 
   if(e.key==='Escape'){
-    if(floatingSelection)commitFloatingSelection();
+    if(floatingSelection) {
+      floatingSelection = null;
+      drawSelectionOverlay();
+    }
     else if(hasSelection)initSelectionMask();
     return;
   }
@@ -4613,7 +4681,7 @@ function pasteFromClipboard(){
   // Place it slightly offset from the original so it's obviously a new paste
   const px=Math.max(0,Math.min(CR.width-src.width,Math.floor((CR.width-src.width)/2)+8));
   const py=Math.max(0,Math.min(CR.height-src.height,Math.floor((CR.height-src.height)/2)+8));
-  floatingSelection={canvas:fcv,x:px,y:py};
+  floatingSelection={canvas:fcv,x:px,y:py,w:fcv.width,h:fcv.height};
   // Auto-switch to move tool so user can drag pasted content immediately
   setActiveTool('move');
   drawSelectionOverlay();
@@ -4642,14 +4710,14 @@ function extractSelectionToFloat(cut){
   }
   fCtx.putImageData(fd,0,0);
   if(cut)ctx.putImageData(src,0,0);
-  floatingSelection={canvas:fcv,x:minX,y:minY};
+  floatingSelection={canvas:fcv,x:minX,y:minY,w:fcv.width,h:fcv.height};
   hasSelection=false;drawSelectionOverlay();
 }
 
 function commitFloatingSelection(){
   if(!floatingSelection)return;
   pushUndo();
-  CR.getContext('2d').drawImage(floatingSelection.canvas,floatingSelection.x,floatingSelection.y);
+  CR.getContext('2d').drawImage(floatingSelection.canvas,floatingSelection.x,floatingSelection.y,floatingSelection.w,floatingSelection.h);
   floatingSelection=null;drawSelectionOverlay();
   if(hlColors.length)renderHL();
 }
