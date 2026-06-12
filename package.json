@@ -1,6 +1,6 @@
 {
   "name": "colour-reduction",
-  "version": "1.0.45",
+  "version": "1.0.47",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -31,6 +31,7 @@
     ],
     "nsis": {
       "oneClick": false,
+      "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "include": "electron/installer.nsh"
     }

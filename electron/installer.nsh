@@ -2,7 +2,8 @@
 !macro customInstall
   IfFileExists "C:\Color Reduction\*.*" PromptUser SkipPrompt
 PromptUser:
-  MessageBox MB_YESNO|MB_ICONQUESTION "Existing library colors and settings found!$\n$\nDo you want to KEEP your old library colors?$\n$\nSelect YES to keep your colors.$\nSelect NO to fully reset and delete them." IDYES SkipPrompt
+  IfSilent SkipPrompt
+  MessageBox MB_YESNO|MB_ICONQUESTION "Existing library colors and settings found!$\n$\nDo you want to KEEP your old library colors?$\n$\nSelect YES to keep your colors.$\nSelect NO to fully reset and delete them." /SD IDYES IDYES SkipPrompt
   RMDir /r "$APPDATA\Colour Reduction"
   RMDir /r "C:\Color Reduction"
 SkipPrompt:
