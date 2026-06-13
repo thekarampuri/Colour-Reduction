@@ -1,6 +1,6 @@
 {
   "name": "colour-reduction",
-  "version": "1.0.47",
+  "version": "1.0.50",
   "private": true,
   "main": "electron/main.js",
   "scripts": {

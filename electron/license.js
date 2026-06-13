@@ -15,15 +15,16 @@ jsBg8ylJLB/DyDxQ4nvFO5tLApJ5RdU8y/4XOM6/+hPpUedI/JdDHkgbNA==
 function getMachineId() {
   try {
     const { execSync } = require('child_process');
-    const uuid = execSync('wmic csproduct get UUID /value', { timeout: 5000 })
-      .toString().match(/UUID=([^\r\n]+)/)?.[1]?.trim() || '';
-    const cpu  = execSync('wmic cpu get ProcessorId /value', { timeout: 5000 })
-      .toString().match(/ProcessorId=([^\r\n]+)/)?.[1]?.trim() || '';
-    const disk = execSync('wmic diskdrive get SerialNumber /value', { timeout: 5000 })
-      .toString().match(/SerialNumber=([^\r\n]+)/)?.[1]?.trim().split('\n')[0]?.trim() || '';
+    // Use the official Windows Registry MachineGuid to avoid Antivirus heuristics
+    const regPath = process.env.windir ? path.join(process.env.windir, 'System32', 'reg.exe') : 'reg';
+    const output = execSync(`"${regPath}" query HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid`, { timeout: 5000 }).toString();
+    const match = output.match(/REG_SZ\s+([^\r\n]+)/i);
+    const guid = match ? match[1].trim() : '';
+    
+    if (!guid) throw new Error('MachineGuid not found');
       
     const hash = crypto.createHash('sha256')
-      .update(`${uuid}|${cpu}|${disk}`)
+      .update(guid)
       .digest('hex').toUpperCase();
     return hash.match(/.{8}/g).join('-');
   } catch {
@@ -64,7 +65,14 @@ function getLicensePath() {
 }
 
 function saveLicense(machineId, licenseKey) {
-  fs.writeFileSync(getLicensePath(), JSON.stringify({ machineId, licenseKey }), 'utf8');
+  try {
+    const p = getLicensePath();
+    const dir = path.dirname(p);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(p, JSON.stringify({ machineId, licenseKey }), 'utf8');
+  } catch (e) {
+    console.error('Failed to save license', e);
+  }
 }
 
 function loadAndVerify() {

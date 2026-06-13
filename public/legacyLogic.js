@@ -272,7 +272,8 @@ let hlMode=false; // true = click on swatch activates highlight
 let activeToolColor='#000000'; // shared color for fill/paint/outline tools
 let selectionMask=null; // Uint8Array
 let hasSelection=false;
-let floatingSelection=null; // { canvas, x, y }
+let floatingSelection=null; // { canvas, x, y, w, h }
+let selectionClipboard=null; // stores copied canvas for paste
 let lassoPoints=[];
 function updateActiveToolColor(hex){
   activeToolColor=hex;
@@ -2020,12 +2021,82 @@ window.addEventListener('mouseup', e => {
   if (isSelectionMoving) isSelectionMoving = false;
 });
 window.addEventListener('keydown', e => {
-  if ((e.key === 'Escape' || e.key === 'Enter') && floatingSelection) {
-    commitFloatingSelection();
-  } else if (e.key === 'Escape' && hasSelection) {
-    initSelectionMask();
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  if (e.key === 'Escape') {
+    if (floatingSelection) { floatingSelection = null; drawSelectionOverlay(); }
+    else if (hasSelection) initSelectionMask();
+    return;
+  }
+  if (e.key === 'Enter' && floatingSelection) { commitFloatingSelection(); return; }
+
+  // Arrow keys: nudge floating selection 1px (or 10px with Shift)
+  if (floatingSelection && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1;
+    if (e.key === 'ArrowUp')    floatingSelection.y -= step;
+    if (e.key === 'ArrowDown')  floatingSelection.y += step;
+    if (e.key === 'ArrowLeft')  floatingSelection.x -= step;
+    if (e.key === 'ArrowRight') floatingSelection.x += step;
+    drawSelectionOverlay();
+    return;
+  }
+
+  // Ctrl+C — copy selection to internal clipboard
+  if ((e.ctrlKey || e.metaKey) && e.key === 'c' && (hasSelection || floatingSelection) && imgInfo && curTab === 'reduced') {
+    e.preventDefault();
+    copySelectionToClipboard();
+    return;
+  }
+  // Ctrl+V — paste from internal clipboard
+  if ((e.ctrlKey || e.metaKey) && e.key === 'v' && selectionClipboard && imgInfo && curTab === 'reduced') {
+    e.preventDefault();
+    pasteFromClipboard();
+    return;
   }
 });
+
+function copySelectionToClipboard() {
+  if (floatingSelection) {
+    selectionClipboard = { canvas: floatingSelection.canvas, w: floatingSelection.w || floatingSelection.canvas.width, h: floatingSelection.h || floatingSelection.canvas.height };
+    return;
+  }
+  if (!hasSelection || !selectionMask) return;
+  const w = CR.width, h = CR.height;
+  let minX=w, minY=h, maxX=0, maxY=0;
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) {
+    if(selectionMask[y*w+x]) { if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+  }
+  const fw=maxX-minX+1, fh=maxY-minY+1;
+  if(fw<=0||fh<=0) return;
+  const ctx=CR.getContext('2d'), src=ctx.getImageData(0,0,w,h);
+  const fcv=document.createElement('canvas'); fcv.width=fw; fcv.height=fh;
+  const fCtx=fcv.getContext('2d'), fd=fCtx.createImageData(fw,fh);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) {
+    const midx=y*w+x;
+    if(selectionMask[midx]) {
+      const sx=midx*4, fx=((y-minY)*fw+(x-minX))*4;
+      fd.data[fx]=src.data[sx]; fd.data[fx+1]=src.data[sx+1]; fd.data[fx+2]=src.data[sx+2]; fd.data[fx+3]=255;
+    }
+  }
+  fCtx.putImageData(fd,0,0);
+  selectionClipboard = { canvas: fcv, w: fw, h: fh };
+}
+
+function pasteFromClipboard() {
+  if (!selectionClipboard) return;
+  if (floatingSelection) commitFloatingSelection();
+  initSelectionMask();
+  const src = selectionClipboard.canvas;
+  const fcv = document.createElement('canvas'); fcv.width = src.width; fcv.height = src.height;
+  fcv.getContext('2d').drawImage(src, 0, 0);
+  const px = Math.max(0, Math.min(CR.width - src.width, Math.floor((CR.width - src.width) / 2) + 8));
+  const py = Math.max(0, Math.min(CR.height - src.height, Math.floor((CR.height - src.height) / 2) + 8));
+  floatingSelection = { canvas: fcv, x: px, y: py, w: fcv.width, h: fcv.height };
+  setActiveTool('move');
+  drawSelectionOverlay();
+}
 
 function extractSelectionToFloat(cut) {
   if (!hasSelection || !selectionMask) return;
@@ -2068,7 +2139,7 @@ function extractSelectionToFloat(cut) {
   fCtx.putImageData(fd, 0, 0);
   if (cut) ctx.putImageData(src, 0, 0);
   
-  floatingSelection = { canvas: fcv, x: minX, y: minY };
+  floatingSelection = { canvas: fcv, x: minX, y: minY, w: fcv.width, h: fcv.height };
   hasSelection = false;
   drawSelectionOverlay();
 }
@@ -2077,7 +2148,7 @@ function commitFloatingSelection() {
   if (!floatingSelection) return;
   pushUndo();
   const ctx = CR.getContext('2d');
-  ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y);
+  ctx.drawImage(floatingSelection.canvas, floatingSelection.x, floatingSelection.y, floatingSelection.w || floatingSelection.canvas.width, floatingSelection.h || floatingSelection.canvas.height);
   floatingSelection = null;
   drawSelectionOverlay();
   if(hlColors.length)renderHL();
