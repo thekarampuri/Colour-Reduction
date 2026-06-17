@@ -4611,6 +4611,7 @@ window.addEventListener('mouseup',()=>{
   if(isSelectionResizing) { isSelectionResizing = false; resizeCorner = ''; }
 });
 
+window.addEventListener('mousemove', e => window.lastMouseE = e);
 // Keyboard: Escape = deselect/commit, Enter = commit floating, Ctrl+C = copy, Ctrl+V = paste
 window.addEventListener('keydown',e=>{
   const tag=document.activeElement&&document.activeElement.tagName;
@@ -4695,8 +4696,17 @@ function pasteFromClipboard(){
   const fCtx=fcv.getContext('2d');
   fCtx.drawImage(src,0,0);
   // Place it slightly offset from the original so it's obviously a new paste
-  const px=Math.max(0,Math.min(CR.width-src.width,Math.floor((CR.width-src.width)/2)+8));
-  const py=Math.max(0,Math.min(CR.height-src.height,Math.floor((CR.height-src.height)/2)+8));
+  let px=Math.max(0,Math.min(CR.width-src.width,Math.floor((CR.width-src.width)/2)+8));
+  let py=Math.max(0,Math.min(CR.height-src.height,Math.floor((CR.height-src.height)/2)+8));
+  
+  if (window.lastMouseE) {
+    const pos = getCanvasPx(window.lastMouseE, CR);
+    if (pos) {
+      px = pos.x - Math.floor(src.width / 2);
+      py = pos.y - Math.floor(src.height / 2);
+    }
+  }
+  
   floatingSelection={canvas:fcv,x:px,y:py,w:fcv.width,h:fcv.height};
   // Auto-switch to move tool so user can drag pasted content immediately
   setActiveTool('move');
