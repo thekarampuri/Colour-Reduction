@@ -1299,7 +1299,25 @@ function showHideObjectContextMenu(clientX, clientY, lx, ly) {
       ctxMenu.style.borderRadius = '3px';
       ctxMenu.style.fontSize = '12px';
       ctxMenu.style.cursor = 'pointer';
-      
+
+      // ── Place Here (commit floating selection) ──
+      const placeItem = document.createElement('div');
+      placeItem.textContent = 'Place Here';
+      placeItem.style.padding = '6px 16px';
+      placeItem.onmouseover = () => placeItem.style.background = '#e5f1fb';
+      placeItem.onmouseout = () => placeItem.style.background = '#fff';
+      placeItem.onclick = () => {
+          ctxMenu.style.display = 'none';
+          commitFloatingSelection();
+      };
+      ctxMenu.appendChild(placeItem);
+
+      // ── Separator ──
+      const sep = document.createElement('div');
+      sep.style.cssText = 'height:1px;background:#e0e0e0;margin:3px 0;';
+      ctxMenu.appendChild(sep);
+
+      // ── Hide It ──
       const hideItem = document.createElement('div');
       hideItem.textContent = 'Hide It';
       hideItem.style.padding = '6px 16px';
@@ -1311,7 +1329,7 @@ function showHideObjectContextMenu(clientX, clientY, lx, ly) {
       };
       ctxMenu.appendChild(hideItem);
       document.body.appendChild(ctxMenu);
-      
+
       document.addEventListener('mousedown', e => {
           if (!ctxMenu.contains(e.target)) ctxMenu.style.display = 'none';
       });
@@ -1330,39 +1348,23 @@ function hideFloatingObject(lx, ly) {
   const fctx = floatingSelection.canvas.getContext('2d');
   const imgData = fctx.getImageData(0, 0, fw, fh);
   const data = imgData.data;
-  
+
   const targetPxIdx = (ly * fw + lx) * 4;
-  if (data[targetPxIdx+3] < 10) return; 
+  if (data[targetPxIdx+3] < 10) return;
 
   const tr = data[targetPxIdx];
   const tg = data[targetPxIdx+1];
   const tb = data[targetPxIdx+2];
-  
-  const visited = new Uint8Array(fw * fh);
-  const stack = [[lx, ly]];
-  visited[ly * fw + lx] = 1;
-  const dirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
-  
-  while (stack.length) {
-      const [x, y] = stack.pop();
-      const idx = (y * fw + x) * 4;
-      
-      data[idx] = 0; data[idx+1] = 0; data[idx+2] = 0; data[idx+3] = 0;
-      
-      for (const [dx, dy] of dirs) {
-          const nx = x + dx, ny = y + dy;
-          if (nx >= 0 && nx < fw && ny >= 0 && ny < fh) {
-              const ni = ny * fw + nx;
-              if (!visited[ni]) {
-                  const nidx = ni * 4;
-                  if (data[nidx+3] > 10 && data[nidx] === tr && data[nidx+1] === tg && data[nidx+2] === tb) {
-                      visited[ni] = 1;
-                      stack.push([nx, ny]);
-                  }
-              }
-          }
-      }
+
+  // Scan ALL pixels in the floating canvas and clear every one that
+  // matches the clicked color — so copy-pasted motifs with the same
+  // color all hide together, not just the contiguous region.
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i+3] > 10 && data[i] === tr && data[i+1] === tg && data[i+2] === tb) {
+      data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 0;
+    }
   }
+
   fctx.putImageData(imgData, 0, 0);
   if(typeof drawSelectionOverlay === 'function') drawSelectionOverlay();
 }
@@ -1631,6 +1633,8 @@ function olApplyGroupOutline(){
   }
   const out=new Uint8ClampedArray(d);let count=0;
   for(let i=0;i<marked.length;i++){if(!marked[i])continue;count++;const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;}
+  // Save undo state before writing to canvas — one entry per outline operation
+  pushUndo();
   ctx.putImageData(new ImageData(out,w,h),0,0);
   COUT.style.display='none';
   if(hlColors.length)renderHL();
@@ -1649,12 +1653,14 @@ function doOutlineAt(e){
     return;
   }
   const isSimilar=document.getElementById('ol-area-all')?.checked;
-  if(!olColorGroup.length){pushUndo();const mask=isSimilar?null:buildConnectedMask(pos.x,pos.y,srcRgb);applyOutline(srcRgb,mask);return;}
+  // Pass skipPush=true — applyOutline handles its own pushUndo internally,
+  // so callers must NOT push again to avoid creating a double undo entry.
+  if(!olColorGroup.length){const mask=isSimilar?null:buildConnectedMask(pos.x,pos.y,srcRgb);applyOutline(srcRgb,mask);return;}
   const tol=16;
   const entry=olColorGroup.find(g=>Math.abs(srcRgb[0]-g.rgb[0])<=tol&&Math.abs(srcRgb[1]-g.rgb[1])<=tol&&Math.abs(srcRgb[2]-g.rgb[2])<=tol);
   if(!entry){showOlStatus('Color not in group — use 🎯 Pick Colors to add','#999');return;}
   if(!isSimilar){olColorGroup.forEach(e=>{e.clicks=[];});entry.clicks=[{x:pos.x,y:pos.y,mask:null}];}
-  pushUndo();olApplyGroupOutline();
+  olApplyGroupOutline();
 }
 
 // 8-directional BFS with wrap coords and tol=16
@@ -1739,14 +1745,19 @@ function applyOutline(srcRgb, connectedMask=null, skipPush=false){
     }
   }
 
+  // Push undo BEFORE writing — saves the true pre-outline canvas state.
+  // One entry per click: callers must NOT call pushUndo() separately.
+  if(!skipPush) pushUndo();
+
   const out=new Uint8ClampedArray(d);
   let count=0;
   for(let i=0;i<marked.length;i++){
     if(!marked[i])continue;count++;
     const p=i*4;out[p]=outlineRgb[0];out[p+1]=outlineRgb[1];out[p+2]=outlineRgb[2];out[p+3]=255;
   }
-  if(!skipPush)pushUndo();
-if(!skipPush){if(hlColors.length)renderHL();showOlStatus('✓ '+count.toLocaleString()+' px outlined','#388e3c');}
+  // Write the outlined pixels back to the canvas
+  ctx.putImageData(new ImageData(out,w,h),0,0);
+  if(!skipPush){if(hlColors.length)renderHL();showOlStatus('✓ '+count.toLocaleString()+' px outlined','#388e3c');}
 }
 
 function showOlStatus(msg,col){
@@ -1991,16 +2002,21 @@ let isSelectionMoving = false, moveStartX = 0, moveStartY = 0;
 VP.addEventListener('mousedown', e => {
   if (curTab !== 'reduced' || !imgInfo || e.button !== 0) return;
   const pos = getCanvasPx(e, CR); if (!pos) return;
-  
+
   if (floatingSelection) {
     if (pos.x >= floatingSelection.x && pos.x <= floatingSelection.x + floatingSelection.canvas.width &&
         pos.y >= floatingSelection.y && pos.y <= floatingSelection.y + floatingSelection.canvas.height) {
+      // Click INSIDE the floating selection — start dragging it
       isSelectionMoving = true;
       moveStartX = pos.x - floatingSelection.x;
       moveStartY = pos.y - floatingSelection.y;
       e.preventDefault(); e.stopPropagation();
       return;
     }
+    // Click OUTSIDE the floating selection — do NOT auto-commit on single click.
+    // Commit only happens on double-click (see VP dblclick handler below)
+    // or via right-click → "Place Here" context menu.
+    return;
   }
 
   if (activeTool !== 'move') return;
@@ -2012,8 +2028,19 @@ VP.addEventListener('mousedown', e => {
       initSelectionMask(); return;
     }
   }
-  if (floatingSelection) {
+}, {capture: true});
+
+// Double-click outside the floating selection → commit it in place
+VP.addEventListener('dblclick', e => {
+  if (!floatingSelection || curTab !== 'reduced' || !imgInfo || e.button !== 0) return;
+  const pos = getCanvasPx(e, CR); if (!pos) return;
+  const inside = pos.x >= floatingSelection.x &&
+                 pos.x <= floatingSelection.x + floatingSelection.canvas.width &&
+                 pos.y >= floatingSelection.y &&
+                 pos.y <= floatingSelection.y + floatingSelection.canvas.height;
+  if (!inside) {
     commitFloatingSelection();
+    e.preventDefault(); e.stopPropagation();
   }
 }, {capture: true});window.addEventListener('mousemove', e => {
   window.lastMouseE = e;

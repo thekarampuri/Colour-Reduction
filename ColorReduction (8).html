@@ -2966,7 +2966,25 @@ function showHideObjectContextMenu(clientX, clientY, lx, ly) {
       ctxMenu.style.borderRadius = '3px';
       ctxMenu.style.fontSize = '12px';
       ctxMenu.style.cursor = 'pointer';
-      
+
+      // ── Place Here (commit floating selection) ──
+      const placeItem = document.createElement('div');
+      placeItem.textContent = 'Place Here';
+      placeItem.style.padding = '6px 16px';
+      placeItem.onmouseover = () => placeItem.style.background = '#e5f1fb';
+      placeItem.onmouseout = () => placeItem.style.background = '#fff';
+      placeItem.onclick = () => {
+          ctxMenu.style.display = 'none';
+          commitFloatingSelection();
+      };
+      ctxMenu.appendChild(placeItem);
+
+      // Separator
+      const sep = document.createElement('div');
+      sep.style.cssText = 'height:1px;background:#e0e0e0;margin:3px 0;';
+      ctxMenu.appendChild(sep);
+
+      // ── Hide It ──
       const hideItem = document.createElement('div');
       hideItem.textContent = 'Hide It';
       hideItem.style.padding = '6px 16px';
@@ -2978,7 +2996,7 @@ function showHideObjectContextMenu(clientX, clientY, lx, ly) {
       };
       ctxMenu.appendChild(hideItem);
       document.body.appendChild(ctxMenu);
-      
+
       document.addEventListener('mousedown', e => {
           if (!ctxMenu.contains(e.target)) ctxMenu.style.display = 'none';
       });
@@ -2997,38 +3015,21 @@ function hideFloatingObject(lx, ly) {
   const fctx = floatingSelection.canvas.getContext('2d');
   const imgData = fctx.getImageData(0, 0, fw, fh);
   const data = imgData.data;
-  
+
   const targetPxIdx = (ly * fw + lx) * 4;
-  if (data[targetPxIdx+3] < 10) return; 
+  if (data[targetPxIdx+3] < 10) return;
 
   const tr = data[targetPxIdx];
   const tg = data[targetPxIdx+1];
   const tb = data[targetPxIdx+2];
-  
-  const visited = new Uint8Array(fw * fh);
-  const stack = [[lx, ly]];
-  visited[ly * fw + lx] = 1;
-  const dirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
-  
-  while (stack.length) {
-      const [x, y] = stack.pop();
-      const idx = (y * fw + x) * 4;
-      
-      data[idx] = 0; data[idx+1] = 0; data[idx+2] = 0; data[idx+3] = 0;
-      
-      for (const [dx, dy] of dirs) {
-          const nx = x + dx, ny = y + dy;
-          if (nx >= 0 && nx < fw && ny >= 0 && ny < fh) {
-              const ni = ny * fw + nx;
-              if (!visited[ni]) {
-                  const nidx = ni * 4;
-                  if (data[nidx+3] > 10 && data[nidx] === tr && data[nidx+1] === tg && data[nidx+2] === tb) {
-                      visited[ni] = 1;
-                      stack.push([nx, ny]);
-                  }
-              }
-          }
-      }
+
+  // Scan ALL pixels — clear every one that matches the clicked color.
+  // This ensures copy-pasted motifs of the same color all hide together,
+  // not just the contiguous region (old BFS behaviour).
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i+3] > 10 && data[i] === tr && data[i+1] === tg && data[i+2] === tb) {
+      data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 0;
+    }
   }
   fctx.putImageData(imgData, 0, 0);
   if(typeof drawSelectionOverlay === 'function') drawSelectionOverlay();
@@ -3240,7 +3241,8 @@ function doOutlineAt(e){
   const isSimilar=document.getElementById('ol-area-all')?.checked;
 
   if(!olColorGroup.length){
-    pushUndo();
+    // applyOutline calls pushUndo() internally when skipPush=false (default).
+    // Do NOT call pushUndo() here too — that would create 2 undo entries per click.
     const mask=isSimilar?null:buildConnectedMask(pos.x,pos.y,srcRgb);
     applyOutline(srcRgb,mask);
     return;
@@ -4451,7 +4453,9 @@ function drawSelectionOverlay(){
 function doMagicWandAt(e){
   if(!imgInfo||curTab!=='reduced')return;
   const pos=getCanvasPx(e,CR);if(!pos)return;
-  if(floatingSelection)commitFloatingSelection();
+  // Do NOT auto-commit floating selection on a single click.
+  // User must double-click outside or use right-click → Place Here.
+  if(floatingSelection)return;
   // Magic wand is always ADDITIVE — clicking another region adds it.
   // Init mask only if there is no existing selection at all.
   if(!selectionMask||selectionMask.length!==CR.width*CR.height){
@@ -4497,7 +4501,9 @@ function doMagicWandAt(e){
 let isLassoing=false;
 VP.addEventListener('mousedown',e=>{
   if(activeTool!=='lasso'||curTab!=='reduced'||!imgInfo||e.button!==0)return;
-  if(floatingSelection)commitFloatingSelection();
+  // Do NOT auto-commit the floating selection on a single click.
+  // User must double-click outside or use right-click → Place Here.
+  if(floatingSelection)return;
   if(!e.shiftKey)initSelectionMask();
   const pos=getCanvasPx(e,CR);if(!pos)return;
   isLassoing=true;lassoPoints=[pos];
@@ -4544,7 +4550,7 @@ let isSelectionResizing=false,resizeCorner='',resizeStartW=0,resizeStartH=0;
 VP.addEventListener('mousedown',e=>{
   if(curTab!=='reduced'||!imgInfo||e.button!==0)return;
   const pos=getCanvasPx(e,CR);if(!pos)return;
-  
+
   if(floatingSelection){
     const x=floatingSelection.x, y=floatingSelection.y;
     const w=floatingSelection.w, h=floatingSelection.h;
@@ -4564,9 +4570,14 @@ VP.addEventListener('mousedown',e=>{
     }
 
     if(pos.x>=x&&pos.x<=x+w&&pos.y>=y&&pos.y<=y+h){
+      // Click INSIDE the floating selection — start dragging it
       isSelectionMoving=true;moveStartX=pos.x-x;moveStartY=pos.y-y;
       e.preventDefault();e.stopPropagation(); return;
     }
+
+    // Click OUTSIDE floating selection — do NOT auto-commit on single click.
+    // Commit only happens via double-click outside or right-click → Place Here.
+    return;
   }
 
   if(activeTool!=='move')return;
@@ -4575,10 +4586,19 @@ VP.addEventListener('mousedown',e=>{
     if(selectionMask[pos.y*CR.width+pos.x]===1){extractSelectionToFloat(!e.altKey);}
     else{initSelectionMask();return;}
   }
-  if(floatingSelection){
-    commitFloatingSelection();
-  }
 
+},{capture:true});
+
+// Double-click outside the floating selection → commit it in place
+VP.addEventListener('dblclick',e=>{
+  if(!floatingSelection||curTab!=='reduced'||!imgInfo||e.button!==0)return;
+  const pos=getCanvasPx(e,CR);if(!pos)return;
+  const{x,y,w,h}=floatingSelection;
+  const inside=pos.x>=x&&pos.x<=x+w&&pos.y>=y&&pos.y<=y+h;
+  if(!inside){
+    commitFloatingSelection();
+    e.preventDefault();e.stopPropagation();
+  }
 },{capture:true});
 
 window.addEventListener('mousemove',e=>{
