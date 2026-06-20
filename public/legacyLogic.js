@@ -1989,8 +1989,22 @@ window.addEventListener('mouseup', e => {
 
 let isSelectionMoving = false, moveStartX = 0, moveStartY = 0;
 VP.addEventListener('mousedown', e => {
-  if (activeTool !== 'move' || curTab !== 'reduced' || !imgInfo || e.button !== 0) return;
+  if (curTab !== 'reduced' || !imgInfo || e.button !== 0) return;
   const pos = getCanvasPx(e, CR); if (!pos) return;
+  
+  if (floatingSelection) {
+    if (pos.x >= floatingSelection.x && pos.x <= floatingSelection.x + floatingSelection.canvas.width &&
+        pos.y >= floatingSelection.y && pos.y <= floatingSelection.y + floatingSelection.canvas.height) {
+      isSelectionMoving = true;
+      moveStartX = pos.x - floatingSelection.x;
+      moveStartY = pos.y - floatingSelection.y;
+      e.preventDefault(); e.stopPropagation();
+      return;
+    }
+  }
+
+  if (activeTool !== 'move') return;
+
   if (hasSelection && !floatingSelection) {
     if (selectionMask[pos.y * CR.width + pos.x] === 1) {
       extractSelectionToFloat(!e.altKey);
@@ -1999,17 +2013,23 @@ VP.addEventListener('mousedown', e => {
     }
   }
   if (floatingSelection) {
-    if (pos.x >= floatingSelection.x && pos.x <= floatingSelection.x + floatingSelection.canvas.width &&
-        pos.y >= floatingSelection.y && pos.y <= floatingSelection.y + floatingSelection.canvas.height) {
-      isSelectionMoving = true;
-      moveStartX = pos.x - floatingSelection.x;
-      moveStartY = pos.y - floatingSelection.y;
-      e.preventDefault(); e.stopPropagation();
-    } else {
-      commitFloatingSelection();
-    }
+    commitFloatingSelection();
   }
 }, {capture: true});window.addEventListener('mousemove', e => {
+  window.lastMouseE = e;
+  
+  if (floatingSelection && curTab === 'reduced') {
+    const pos = getCanvasPx(e, CR);
+    if (pos && pos.x >= floatingSelection.x && pos.x <= floatingSelection.x + floatingSelection.canvas.width &&
+        pos.y >= floatingSelection.y && pos.y <= floatingSelection.y + floatingSelection.canvas.height) {
+      VP.style.cursor = 'move';
+    } else {
+      VP.style.cursor = '';
+    }
+  } else if (!isSelectionMoving) {
+    VP.style.cursor = '';
+  }
+
   if (isSelectionMoving && floatingSelection) {
     const pos = getCanvasPx(e, CR) || { x: 0, y: 0 };
     floatingSelection.x = pos.x - moveStartX;
@@ -2020,7 +2040,6 @@ VP.addEventListener('mousedown', e => {
 window.addEventListener('mouseup', e => {
   if (isSelectionMoving) isSelectionMoving = false;
 });
-window.addEventListener('mousemove', e => window.lastMouseE = e);
 window.addEventListener('keydown', e => {
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;

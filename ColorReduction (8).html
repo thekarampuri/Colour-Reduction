@@ -4542,12 +4542,9 @@ let isSelectionMoving=false,moveStartX=0,moveStartY=0;
 let isSelectionResizing=false,resizeCorner='',resizeStartW=0,resizeStartH=0;
 
 VP.addEventListener('mousedown',e=>{
-  if(activeTool!=='move'||curTab!=='reduced'||!imgInfo||e.button!==0)return;
+  if(curTab!=='reduced'||!imgInfo||e.button!==0)return;
   const pos=getCanvasPx(e,CR);if(!pos)return;
-  if(hasSelection&&!floatingSelection){
-    if(selectionMask[pos.y*CR.width+pos.x]===1){extractSelectionToFloat(!e.altKey);}
-    else{initSelectionMask();return;}
-  }
+  
   if(floatingSelection){
     const x=floatingSelection.x, y=floatingSelection.y;
     const w=floatingSelection.w, h=floatingSelection.h;
@@ -4568,12 +4565,45 @@ VP.addEventListener('mousedown',e=>{
 
     if(pos.x>=x&&pos.x<=x+w&&pos.y>=y&&pos.y<=y+h){
       isSelectionMoving=true;moveStartX=pos.x-x;moveStartY=pos.y-y;
-      e.preventDefault();e.stopPropagation();
-    } else {commitFloatingSelection();}
+      e.preventDefault();e.stopPropagation(); return;
+    }
   }
+
+  if(activeTool!=='move')return;
+
+  if(hasSelection&&!floatingSelection){
+    if(selectionMask[pos.y*CR.width+pos.x]===1){extractSelectionToFloat(!e.altKey);}
+    else{initSelectionMask();return;}
+  }
+  if(floatingSelection){
+    commitFloatingSelection();
+  }
+
 },{capture:true});
 
 window.addEventListener('mousemove',e=>{
+  window.lastMouseE = e;
+  
+  if (floatingSelection && curTab === 'reduced') {
+    const pos = getCanvasPx(e, CR);
+    if (pos) {
+      const x = floatingSelection.x, y = floatingSelection.y;
+      const w = floatingSelection.w, h = floatingSelection.h;
+      const hs = 6 / zoom;
+      let rc = '';
+      if (Math.abs(pos.x - x) <= hs && Math.abs(pos.y - y) <= hs) rc = 'nw-resize';
+      else if (Math.abs(pos.x - (x+w)) <= hs && Math.abs(pos.y - y) <= hs) rc = 'ne-resize';
+      else if (Math.abs(pos.x - x) <= hs && Math.abs(pos.y - (y+h)) <= hs) rc = 'sw-resize';
+      else if (Math.abs(pos.x - (x+w)) <= hs && Math.abs(pos.y - (y+h)) <= hs) rc = 'se-resize';
+      
+      if (rc) VP.style.cursor = rc;
+      else if (pos.x >= x && pos.x <= x+w && pos.y >= y && pos.y <= y+h) VP.style.cursor = 'move';
+      else VP.style.cursor = '';
+    } else VP.style.cursor = '';
+  } else if (!isSelectionMoving && !isSelectionResizing) {
+    VP.style.cursor = '';
+  }
+
   if(isSelectionResizing && floatingSelection) {
     const pos=getCanvasPx(e,CR) || {x: moveStartX, y: moveStartY};
     const dx = pos.x - moveStartX;
@@ -4611,7 +4641,6 @@ window.addEventListener('mouseup',()=>{
   if(isSelectionResizing) { isSelectionResizing = false; resizeCorner = ''; }
 });
 
-window.addEventListener('mousemove', e => window.lastMouseE = e);
 // Keyboard: Escape = deselect/commit, Enter = commit floating, Ctrl+C = copy, Ctrl+V = paste
 window.addEventListener('keydown',e=>{
   const tag=document.activeElement&&document.activeElement.tagName;
